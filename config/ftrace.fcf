@@ -1,0 +1,100 @@
+# Instructions for using ftrace:
+# ftrace.cpp must be included in the project of the program being compiled.
+# Every source must be compiled with the gcc options:
+#   -g -finstrument-functions
+# Link requires the option:
+#   -rdynamic
+#If libftrace.so is not inside system path add it path to LD_LIBRARY_PATH
+#Define the venv LD_PRELOAD=ftrace
+#Define the venv FTRACE=<path to config file>
+
+#Logger flags------------------------------------------------------------------
+
+#Flag activating/disactivating logger
+#trace=true|false
+trace=false
+
+#Patterns to ignore in logger, patterns are treaded by apparition order, if a pattern is matched more than once then the last match is taken.
+#ignore .*
+#include b<double>
+#include g
+#include b.*
+#include c
+ignore std::.*
+ignore __gnu_cxx::.*
+
+
+#Adds a logger in output file:
+#Syntax: logger=<type>/<unit>/<columns>
+#<type>:
+# global: generate a list with all calls for each function
+# tree: generate a coverage tree
+#<unit>:
+# auto: use the appropriate unit to display time
+# second: display in seconds
+# ticks: display processor ticks (usefull in case of variable frequency processor)
+#<colmuns>:
+# %Name 				: Names of the called functions (in tree format for a tree call)
+# %Call 				: Number of call
+# %TotalTime			: Total time elapsed in calls
+# %AvgTime 				: Average time of call
+# %TotalScopeTime		: Total time elapsed in scope without time in sub-scopes
+# %AvgScopeTime 		: Average time elapsed in scope without average time in sub-scopes
+# %InstTotalTime		: Total time elapsed in instrument's code
+# %InstAvgTime 			: Average time elapsed in instrument's code
+# %InstTotalScopeTime 	: Undocumented
+# %InstAvgScopeTime 	: Undocumented
+# %RealTotalTime
+# %RealAvgTime
+# %RealScopeTime 		: Real time elapsed in scope without time elapsed in instrument code
+# %RealAvgScopeTime 	: Average time elapsed in scope without average time elapsed
+# %Address 				: Adress of function
+# %Source 				: 
+# %AllocSize			: 
+# %AllocNum 			: 
+# %TotalAllocTime		: 
+# %FreeNum 				:
+# %AllocSource 			:
+
+logger=tree/auto/%Call%Name%TotalTime%AvgTime
+
+logger=global/auto/%Call%Name%TotalTime%AvgTime
+
+#
+#Memory flags------------------------------------------------------------------
+#MEM_CHECK=<true|false>
+#Perform a memory check at each function call exit.
+
+#manager=efence|simple|none
+# efence=electric fence memory manager.
+# simple=simple manage with magic key control
+# none=no manager (default value)
+
+#EF_ALIGNMENT=<value>
+# <value>= Default alignment for malloc(). 
+# We want that alignment to be under user control, since
+# smaller alignment lets us catch more bugs, however some software will break if malloc() returns a buffer
+# that is not word-aligned. I would like alignment to be zero so that we could catch all one-byte
+# overruns, however if malloc() is asked to allocate an odd-size buffer and returns an address that is not word-aligned, or whose
+# size is not a multiple of the word size, software breaks. This was the case with the Sun string-handling routines,
+# which can do word fetches up to three bytes beyond the end of a string. I handle this problem in part by providing
+# byte-reference-only versions of the string library functions, but there are other functions that break, too. Some in X Windows, one
+# in Sam Leffler's TIFF library, and doubtless many others.
+
+#EF_PROTECT_FREE=<true|false>
+# default value is false.
+# See if the user wants to protect memory that has been freed until
+# the program exits, rather than until it is re-allocated.
+
+#EF_PROTECT_BELOW=<true|false>
+# default value is false.
+# See if the user wants to protect the address space below a buffer,
+# rather than that above a buffer.
+
+#EF_ALLOW_MALLOC_0=<true|false>
+# default value is false.
+# See if the user wants to allow malloc(0).
+
+#EF_FREE_WIPES=<true|false>
+# default value is false.
+# See if the user wants us to wipe out freed memory.
