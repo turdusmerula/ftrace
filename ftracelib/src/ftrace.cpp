@@ -35,12 +35,6 @@
 #include <iostream>
 #include "com/ThreadData.h"
 
-#include "mem/MemoryPool.h"
-//#include "mem/Memory.h"
-//#include "mem/Allocator.h"
-//#include "mem/AllocatorEFence.h"
-//#include "mem/AllocatorSimple.h"
-//#include "mem/AllocatorSystem.h"
 
 using namespace std ;
 
@@ -94,7 +88,7 @@ void __cyg_profile_func_enter(void *this_fn, void *call_site)
 
 	//Create thread data
 	if(ThreadData::_threadData==NULL)
-		ThreadData::_threadData = MemoryPool::add<ThreadData>() ;
+		ThreadData::_threadData = new ThreadData() ;
 
 	//Lock thread data
 	ThreadData::_threadData->lock() ;
@@ -127,7 +121,7 @@ void __cyg_profile_func_enter(void *this_fn, void *call_site)
         //Scope not found in the parent scope
 
         //Create new child scope
-        Scope::_threadCurrScope = MemoryPool::add<Scope>() ;
+        Scope::_threadCurrScope = new Scope() ;
         Scope::_threadCurrScope->_parentScope = parentScope ;
 
         //Init calls
@@ -152,7 +146,7 @@ void __cyg_profile_func_enter(void *this_fn, void *call_site)
             //Node not found in the global scope list
 
             //Create new global scope for this scope
-            globalScope = MemoryPool::add<Scope>() ;
+            globalScope = new Scope() ;
             Scope::_threadCurrScope->_globalScope = globalScope ;
             globalScope->_globalScope = NULL ;
 
@@ -378,20 +372,20 @@ void __cyg_profile_func_init()
     if(initScope==true)
     {
 		//create first logger, using only for display
-		Logger::_threadRootLogger = MemoryPool::add<Logger>() ;
+		Logger::_threadRootLogger = new Logger() ;
 		Logger::_threadRootLogger->_root = true ;
 		Logger::_threadRootLogger->_timing = Logger::eAuto ;
     	Logger::_loggers->push_back(Logger::_threadRootLogger) ;
 
         //Create thread data
-        Logger::_threadRootLogger->_threadData = MemoryPool::add<ThreadData>() ;
+        Logger::_threadRootLogger->_threadData = new ThreadData() ;
         Logger::_threadRootLogger->_threadData->_threadId = pthread_self() ;
         Logger::_threadRootLogger->_threadData->_threadRootLogger = Logger::_threadRootLogger ;
         Logger::_threadRootLogger->_threadData->_threadScopeList = Scope::_threadScopeList ;
         ThreadData::_threads->push_back(Logger::_threadRootLogger->_threadData) ;
 
 		//Add the root scope, does not correspond to any function
-		Logger::_threadRootLogger->_rootScope = MemoryPool::add<Scope>()	 ;
+		Logger::_threadRootLogger->_rootScope = new Scope()	 ;
 		Logger::_threadRootLogger->_rootScope->_globalScope = NULL ;
 		Logger::_threadRootLogger->_rootScope->_currTime = 0 ;
 		Logger::_threadRootLogger->_rootScope->_time = 0 ;
