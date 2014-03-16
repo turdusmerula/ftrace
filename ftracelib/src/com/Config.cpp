@@ -25,50 +25,6 @@
 #include "log/Logger.h"
 #include <boost/tokenizer.hpp>
 
-/*
- * Default alignment for malloc().
- * We want that alignment to be under user control, since
- * smaller alignment lets us catch more bugs, however
- * some software will break if malloc() returns a buffer
- * that is not word-aligned.
- *
- * I would like alignment to be zero so that we could catch all one-byte
- * overruns, however if malloc() is asked to allocate an odd-size
- * buffer and returns an address that is not word-aligned, or whose
- * size is not a multiple of the word size, software breaks.
- * This was the case with the Sun string-handling routines,
- * which can do word fetches up to three bytes beyond the end of a
- * string. I handle this problem in part by providing
- * byte-reference-only versions of the string library functions, but
- * there are other functions that break, too. Some in X Windows, one
- * in Sam Leffler's TIFF library, and doubtless many others.
- */
-int Config::EF_ALIGNMENT=sizeof(int) ;
-
-/*
- * See if the user wants to protect memory that has been freed until
- * the program exits, rather than until it is re-allocated.
- */
-bool Config::EF_PROTECT_FREE=false ;
-
-/*
- * See if the user wants to protect the address space below a buffer,
- * rather than that above a buffer.
- */
-bool Config::EF_PROTECT_BELOW=false ;
-
-/*
- * See if the user wants to allow malloc(0).
- */
-bool Config::EF_ALLOW_MALLOC_0=false ;
-
-/*
- * See if the user wants us to wipe out freed memory.
- */
-bool Config::EF_FREE_WIPES=false ;
-
-size_t Config::MEMORY_CREATION_SIZE=1024*1024 ;
-int Config::PAGE_SLOT_SIZE=1 ;
 
 //-----------------------------------------------------------------------------
 bool Config::loadConfFile(const std::string &filename_)
