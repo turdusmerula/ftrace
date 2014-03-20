@@ -25,7 +25,7 @@ gcc offers the capability to instrument functions, when the compile option "`ins
 
 The entry and exit functions are not mandatory, if they are not declared they are simply not called. This comportment is used by the logger, the functions are contained in a dynamic library and are added only on demand at runtime.
 
-Output
+Configuration
 =====
 
 When requested ftrace logs on standard output every entry/exit trace for each called function. 
@@ -85,7 +85,10 @@ Output is controled through a configuration file with template:
     ignore .*
     include main.*
 
-The statistic file generated on /tmp will contain a output of this form:
+Output
+=====
+
+The statistic file generated on /tmp will contain an output of this form:
 
     _______________________________________________________________________________
  
