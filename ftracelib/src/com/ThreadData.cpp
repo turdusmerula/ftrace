@@ -1,5 +1,5 @@
 /**
-  @file		Timing.cpp
+  @file		ThreadData.cpp
   @author	S. Besombes
   @date		october 2011
   @version	$Revision: 1.1.1 $
