@@ -1,5 +1,5 @@
 /**
-  @file		Confing.h
+  @file		Config.h
   @author	S. Besombes
   @date		january 2010
   @version	$Revision: 1.1.1 $
