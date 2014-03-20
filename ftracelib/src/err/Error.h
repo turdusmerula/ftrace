@@ -1,5 +1,5 @@
 /**
-@file Config.h
+@file Error.h
 @author S. Besombes
 @date january 2010
 @version $Revision: 1.1.1 $
