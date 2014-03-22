@@ -1,5 +1,5 @@
 /**
-  @file		Confing.h
+  @file		ThreadData.h
   @author	S. Besombes
   @date		october 2011
   @version	$Revision: 1.1.1 $
