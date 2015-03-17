@@ -1,0 +1,3 @@
+[submodule "gcc-demangle"]
+	path = gcc-demangle
+	url = https://android.googlesource.com/platform/external/gcc-demangle
