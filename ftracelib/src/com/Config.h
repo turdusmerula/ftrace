@@ -26,6 +26,8 @@
 
 #include <string>
 
+namespace ftrace {
+
 class Config
 {
 public:
@@ -36,5 +38,7 @@ public:
     static bool loadConfFile(const std::string &filename_)
     	__attribute__((no_instrument_function)) ;
 } ;
+
+}
 
 #endif

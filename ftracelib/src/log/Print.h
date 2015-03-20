@@ -45,6 +45,7 @@ typedef unsigned long		ef_number;
 #define	NBBY	8
 #endif
 
+namespace ftrace {
 
 void printNumber(ef_number number, ef_number base)
 	__attribute__((no_instrument_function)) ;
@@ -60,5 +61,7 @@ void Exit(const char * pattern, ...)
 
 void Print(const char * pattern, ...)
 	__attribute__((no_instrument_function)) ;
+
+}
 
 #endif

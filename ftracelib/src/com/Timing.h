@@ -27,11 +27,18 @@
 #include <stdint.h>
 #include <string>
 
+namespace ftrace {
+
 class Logger ;  //Declared here to avoid include recursion
 
 class Timing
 {
 public:
+
+    /**
+    * Enumeration for display of time in logger.
+    */
+    typedef enum { eAuto, eSecond, eTicks } TimeEnum ;
 
     /**
     * Inline function used to read the rdtsc register of X86 processors.
@@ -77,12 +84,14 @@ public:
 
     /**
     * Compute a string containing a time.
-    * @param time_ Time in ticks.
-    * @param logger_ Logger with parameters for time output.
+    * @param _time Time in ticks.
+    * @param _timing output timing format.
     */
-    static std::string computeTime(uint64_t time_, Logger* logger_)
+    static std::string computeTime(uint64_t _time, TimeEnum _timing)
         __attribute__((no_instrument_function)) ;
 
 } ;
+
+}
 
 #endif

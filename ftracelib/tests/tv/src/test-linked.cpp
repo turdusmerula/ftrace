@@ -1,13 +1,11 @@
 #include <iostream>
 
-void recursive()
+void recursive(int i)
 {
-	static int var=0 ;
+    if(i<20)
+        recursive(++i) ;
 
-	var++ ;
-	if(var<20)
-		recursive() ;
-	new char[var] ;
+	new char[i] ;
 }
 
 void func1()
@@ -45,11 +43,11 @@ int main(int argc, char* argv[])
 {
 	std::cout << "Test" << std::endl ;
 
-	recursive() ;
+	recursive(0) ;
 
 	func5() ;
 
-	recursive() ;
+	recursive(10) ;
 
 	return 0 ;
 }

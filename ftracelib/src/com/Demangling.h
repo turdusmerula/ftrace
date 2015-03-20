@@ -31,6 +31,8 @@
 
 #include <string>
 
+namespace ftrace {
+
 /**
 * Default depth for stack trace.
 */
@@ -51,6 +53,8 @@ public:
     static void getCaller(std::string &source_, std::string &symbol_, int depth_=2)
          __attribute__((no_instrument_function)) ;
 } ;
+
+}
 
 extern const char* __progname ;
 

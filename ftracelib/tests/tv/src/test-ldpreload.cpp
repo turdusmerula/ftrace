@@ -7,6 +7,7 @@ void recursive()
 	var++ ;
 	if(var<20)
 		recursive() ;
+	new char[var] ;
 }
 
 void func1()

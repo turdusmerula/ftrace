@@ -56,10 +56,10 @@ public:
     void* address_ ;
 
     /**
-    * Global list of scope descriptors.
-    * There is one address for each scope allowing a scope to be demangled only once a time.
-    */
-    static std::map<void*,  ScopeDescriptor*>* descriptors_ ;
+     * Indicate if scope should be shown on console outputs.
+     * This flag should be part of the rootLogger bug is cached here for performance reasons.
+     */
+    bool filter_ ;
 } ;
 
 }

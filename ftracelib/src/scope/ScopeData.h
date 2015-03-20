@@ -37,6 +37,7 @@ class ScopeData
 public:
     ScopeData() ;
 
+
     /**
     * Total elapsed time for the scope.
     */

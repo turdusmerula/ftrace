@@ -21,66 +21,92 @@
    MA 02110-1301, USA.
 */
 
-#ifndef THREADDATA_H
-#define THREADDATA_H
+#ifndef _THREADDATA_H
+#define _THREADDATA_H
 
 #include <string>
 #include <list>
 #include <map>
+#include <stack>
 #include <pthread.h>
 #include <unistd.h>
 
+namespace ftrace {
+
 class Scope ;
 class Logger ;
+
 
 /**
  * Data of the thread that must be protected by mutex.
  */
 class ThreadData
 {
-private:
-	/**
-	 * Init thread mutex.
-	 */
-	void initLock() ;
-
-	/*
-	 * mutex to enable multithreaded operation
-	 */
-	pthread_mutex_t _mutex ;
-
-	/*
-	 * mutex to enable multithreaded operation
-	 */
-	static pthread_mutex_t _globalMutex ;
-
 public:
 
 	/**
      * Thread identifier.
      */
-    pthread_t _threadId ;
+    pthread_t id_ ;
 
 	/**
 	 * Counter incremented for each new thread.
 	 */
-    static unsigned long long _threadCounter ;
+    static size_t count_ ;
 
     /**
-     * Thread number.
+     * Thread creation number, each new thread gets an increased by 1 value.
      */
-    unsigned long long _threadNumber ;
+    size_t number_ ;
 
-	/**
+
+    /**
+     * Start time for the thread.
+     */
+    uint64_t startTime_ ;
+
+    /**
+     * End time for the thread.
+     */
+    uint64_t endTime_ ;
+
+
+    /**
      * List of every created threads for the process.
      */
-    static std::list<ThreadData*>* _threads ;
+    static std::list<ThreadData*>* threads_ ;
+
+
 
     /**
-     * Current data for thread.
-     */
-    static __thread ThreadData* _threadData ;
+    * List of scopes.
+    * One per thread.
+    */
+    std::map<void*,  Scope*>* scopes_ ;
 
+    /**
+    * Call stack.
+    * One per thread.
+    */
+    std::stack<Scope*>* scopeStack_ ;
+
+    /**
+    * Current scope.
+    * One per thread.
+    */
+    Scope* currScope_ ;
+
+    /**
+    * Prev scope.
+    * One per thread.
+    */
+    Scope* prevScope_ ;
+
+    /**
+    * root scope that owns every other scopes.
+    * One per thread.
+    */
+    Scope* rootScope_ ;
 
     /**
      * Constructor.
@@ -116,19 +142,39 @@ public:
     	__attribute__((no_instrument_function)) ;
 
 
-    //-----------------------------------------------------------------------------
-    //Thread data section
+private:
     /**
-    * List of scopes.
-    */
-    std::map<void*,  Scope*>* _threadScopeList ;
+     * Init thread mutex.
+     */
+    void initLock() ;
 
-    /**
-    * Current root logger for the thread.
-    */
-    Logger* _threadRootLogger ;
+    /*
+     * mutex to enable multithreaded operation
+     */
+    pthread_mutex_t mutex_ ;
+
+    /*
+     * mutex to enable multithreaded operation
+     */
+    static pthread_mutex_t globalMutex_ ;
 
 } ;
 
+/**
+ * This object is used as a spy to trace thread beginning and end of life.
+ */
+class ThreadLiveSpy
+{
+public:
+    ThreadLiveSpy() ;
+    ~ThreadLiveSpy() ;
+} ;
+
+/**
+ * Current data for thread.
+ */
+extern thread_local ThreadData* threadData ;
+
+}
 
 #endif

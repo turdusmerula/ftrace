@@ -24,8 +24,9 @@
 #include "com/Demangling.h"
 
 #include <stdlib.h>
-#include <demangle.h>
-#include <libiberty.h>
+#include "demangle.h"
+
+using namespace ftrace ;
 
 //-----------------------------------------------------------------------------
 void Demangling::getCaller(std::string &source_, std::string &symbol_, int depth_)
@@ -55,16 +56,17 @@ void Demangling::getCaller(std::string &source_, std::string &symbol_, int depth
     //printf("--1> %s\n", symbol_.c_str()) ;
     //printf("--2> %s\n", source_.c_str()) ;
 
+
     char* result=cplus_demangle(symbol_.c_str(), DMGL_ANSI|DMGL_VERBOSE) ;
-	//TODO: this wont be thread safe but this string should be static
+    //TODO: this wont be thread safe but this string should be static
     const std::string s_result=(result ? result : symbol_) ;
-    //TODO: eliminate malloc here (maybe intercept malloc for cplus_demangle?)
     if(result)
     {
-        free(result);
+        // cplus_demangle uses internally uses malloc and return the allocated pointer
+        free(result) ;
     }
+
     //printf("--3> %s\n", s_result.c_str()) ;
     symbol_ = s_result ;
 }
 //-----------------------------------------------------------------------------
-

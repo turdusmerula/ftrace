@@ -22,7 +22,6 @@
 */
 
 #include "com/Timing.h"
-#include "log/Logger.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -34,6 +33,8 @@
 #include <sstream>
 
 #define NOMFICH_CPUINFO "/proc/cpuinfo"
+
+using namespace ftrace ;
 
 //-----------------------------------------------------------------------------
 double Timing::readCPUFreq()
@@ -95,18 +96,18 @@ std::string Timing::getDate()
 }
 
 //-----------------------------------------------------------------------------
-std::string Timing::computeTime(uint64_t time_, Logger* logger_)
+std::string Timing::computeTime(uint64_t _time, TimeEnum _timing)
 {
 	std::stringstream TmpStream ;
 
-	if(logger_->_timing==Logger::eSecond)
+	if(_timing==eSecond)
 	{
-        long double TimeSec=tickToSecond(time_) ;
+        long double TimeSec=tickToSecond(_time) ;
 		TmpStream << TimeSec ;
 	}
-	else if(logger_->_timing==Logger::eAuto)
+	else if(_timing==eAuto)
 	{
-        long double TimeSec=tickToSecond(time_) ;
+        long double TimeSec=tickToSecond(_time) ;
 		if(TimeSec<0.1e-6)
 			TmpStream << TimeSec*1.e9 << "ns" ;
 		else if(TimeSec<0.1e-3)
@@ -128,7 +129,7 @@ std::string Timing::computeTime(uint64_t time_, Logger* logger_)
 	}
 	else
 	{
-	    TmpStream <<  time_ ;
+	    TmpStream <<  _time ;
     }
 
 	return TmpStream.str() ;

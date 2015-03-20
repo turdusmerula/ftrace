@@ -1,3 +1,4 @@
+###############################################################################
 # Instructions for using ftrace:
 # ftrace.cpp must be included in the project of the program being compiled.
 # Every source must be compiled with the gcc options:
@@ -7,35 +8,48 @@
 #If libftrace.so is not inside system path add it path to LD_LIBRARY_PATH
 #Define the venv LD_PRELOAD=ftrace
 #Define the venv FTRACE=<path to config file>
+###############################################################################
 
-#Logger flags------------------------------------------------------------------
+# declares options for the console logger that traces entry/exit of functions
+[global]
+	#Flag activating/deactivating logger
+	#trace=true|false
+	trace=true
+	
+	#Patterns to ignore in logger, patterns are treaded by apparition order, if a pattern is matched more than once then the last match is taken.
+	#ignore .*
+	#include b<double>
+	#include g
+	#include b.*
+	#include c
+	ignore std::.*
+	ignore __gnu_cxx::.*
 
-#Flag activating/disactivating logger
-#trace=true|false
-trace=false
-
-#Patterns to ignore in logger, patterns are treaded by apparition order, if a pattern is matched more than once then the last match is taken.
-#ignore .*
-#include b<double>
-#include g
-#include b.*
-#include c
-ignore std::.*
-ignore __gnu_cxx::.*
-
-
+#[logger]
 #Adds a logger in output file:
-#Syntax: logger=<type>/<unit>/<columns>
-#<type>:
-# global: generate a list with all calls for each function
+# <file>: prefix for the output logger output file, default=.stats
+# if the same filename is given to several loggers data is appended to the end of file
+#
+# <type>: tree / flat / raw
 # tree: generate a coverage tree
-#<unit>:
+# flat: generate a flat list with all calls for each function
+# raw: print logger raw tree data, all options are ignored
+#
+# <timing>: how to export timing informations
 # auto: use the appropriate unit to display time
 # second: display in seconds
 # ticks: display processor ticks (usefull in case of variable frequency processor)
-#<colmuns>:
-# %Name 				: Names of the called functions (in tree format for a tree call)
+#
+# <scope>: process / thread
+# process: data are concatenated by process
+# thread: defaul mode, export informations for each thread
+#
+# <colmuns>:
+# %Name 				: Demangled names of the called functions 
+# %Source 				: Raw name of the function
+# %Address 				: Adress of function
 # %Call 				: Number of call
+
 # %TotalTime			: Total time elapsed in calls
 # %AvgTime 				: Average time of call
 # %TotalScopeTime		: Total time elapsed in scope without time in sub-scopes
@@ -48,14 +62,56 @@ ignore __gnu_cxx::.*
 # %RealAvgTime
 # %RealScopeTime 		: Real time elapsed in scope without time elapsed in instrument code
 # %RealAvgScopeTime 	: Average time elapsed in scope without average time elapsed
-# %Address 				: Adress of function
-# %Source 				: 
 # %AllocSize			: 
 # %AllocNum 			: 
 # %TotalAllocTime		: 
 # %FreeNum 				:
 # %AllocSource 			:
 
-logger=tree/auto/%Call%Name%TotalTime%AvgTime
+[logger]
+	# for raw logger all other options are ignored
+	file=/tmp/trace-raw
+	type=raw
 
-logger=global/auto/%Call%Name%TotalTime%AvgTime
+[logger]
+	file=/tmp/trace-process
+	type=tree
+	timing=auto
+	scope=process
+	columns=%Call %Name %TotalTime %AvgTime
+	
+	ignore std::.*
+	ignore boost::.*
+
+[logger]
+	# if the same filename is given data is appended to the end of file
+	file=/tmp/trace-process
+	type=flat
+	timing=auto
+	scope=process
+	columns=%Call %Name %TotalTime %AvgTime
+	
+	ignore std::.*
+	ignore boost::.*
+
+
+[logger]
+	file=/tmp/trace-thread
+	type=tree
+	timing=auto
+	scope=thread
+	columns=%Call %Name %TotalTime %AvgTime
+	
+	ignore std::.*
+	ignore boost::.*
+
+[logger]
+	# if the same filename is given data is appended to the end of file
+	file=/tmp/trace-thread
+	type=flat
+	timing=auto
+	scope=thread
+	columns=%Call %Name %TotalTime %AvgTime
+	
+	ignore std::.*
+	ignore boost::.*

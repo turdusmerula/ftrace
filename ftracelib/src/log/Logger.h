@@ -24,12 +24,15 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#include "scope/Scope.h"
+#include <scope/Scope.h>
+#include <com/Timing.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/regex.hpp>
 
 #include <ostream>
+
+namespace ftrace {
 
 class ThreadData ;
 
@@ -41,20 +44,24 @@ struct Column
     /**
     * Enumeration for columns to display in logger.
     */
-    typedef enum {  eCall,
-                    eAddress ,
-                    eSource,
-                    eName, eTreeName,
-                    eTotalTime, eAvgTime,              //Total time elapsed for scope
-                    eTotalScopeTime, eAvgScopeTime,    //Total time in scope only
-                    eInstTotalTime, eInstAvgTime,      //Total time in instrument
-                    eInstTotalScopeTime, eInstAvgScopeTime, //Total time in instrument for scope
-                    eRealTotalTime, eRealAvgTime,      //Real total time elapsed for scope (total time without time elapsed in instrument)
-                    eAllocSize,                         //Total amount of memory allocated
-                    eAllocNum,                          //Number of memory blocks allocated
-                    eTotalAllocTime,                    //Total Time elapsed in alloc
-                    eFreeNum,                           //Number of blocs freeds
-                    eAllocSource,                       //Source scopes of freed memory
+    typedef enum {
+                    eName,          // demangled name if available
+                    eSource,        // source name, not demangled
+                    eAddress ,      // function address
+                    eParentId,      // parent scope id
+                    eId,            // unique id of the scope
+                    eCall,          // total number of calls
+//                    eTreeName,
+//                    eTotalTime, eAvgTime,              //Total time elapsed for scope
+//                    eTotalScopeTime, eAvgScopeTime,    //Total time in scope only
+//                    eInstTotalTime, eInstAvgTime,      //Total time in instrument
+//                    eInstTotalScopeTime, eInstAvgScopeTime, //Total time in instrument for scope
+//                    eRealTotalTime, eRealAvgTime,      //Real total time elapsed for scope (total time without time elapsed in instrument)
+//                    eAllocSize,                         //Total amount of memory allocated
+//                    eAllocNum,                          //Number of memory blocks allocated
+//                    eTotalAllocTime,                    //Total Time elapsed in alloc
+//                    eFreeNum,                           //Number of blocs freeds
+//                    eAllocSource,                       //Source scopes of freed memory
                     eError
                 } ColEnum ;
 
@@ -62,22 +69,22 @@ struct Column
     /**
     * Column type.
     */
-    ColEnum _type ;
+    ColEnum type_ ;
 
     /**
     * Max width of data inside column.
     */
-    unsigned int _width ;
+    unsigned int width_ ;
 
     /**
     * Title of the column.
     */
-    std::string _title ;
+    std::string title_ ;
 
     /**
     * Lines of data inside the column.
     */
-    std::vector<std::string> _lines ;
+    std::vector<std::string> lines_ ;
 } ;
 
 /**
@@ -88,12 +95,12 @@ struct Pattern
     /**
     * Indicates if pattern is an include or exclude pattern.
     */
-    bool _ignore ;
+    bool ignore_ ;
 
     /**
     * Pattern to apply.
     */
-    boost::regex _pattern ;
+    boost::regex pattern_ ;
 } ;
 
 /**
@@ -103,125 +110,166 @@ class Logger
 {
 public:
 
-    /**
-    * Enumeration for display of time in logger.
-    */
-    typedef enum { eAuto, eSecond, eTicks } TimeEnum ;
+    Logger() ;
 
+    typedef enum { eProcess, eThread } LoggerScopeEnum ;
+    typedef enum { eFlat, eTree, eRaw } LoggerTypeEnum ;
 
     /**
      * Indicates if logger is a root logger.
      * Root loggers does log on console but does not appear in output stat files.
      */
-    bool _root ;
+    bool root_ ;
 
     /**
-    * Indicates if logger is a tree log.
+    * Indicates logger type.
     */
-    bool _treeLog ;
+    LoggerTypeEnum logType_ ;
+
+    /**
+    * Indicates logger scope.
+    */
+    LoggerScopeEnum logScope_ ;
+
 
     /**
     * Way of displaying time inside logger.
     */
-    TimeEnum _timing ;
+    Timing::TimeEnum timing_ ;
 
     /**
     * Columns to display inside logger.
     */
-    std::vector<Column*> _columns ;
+    std::vector<Column*> columns_ ;
 
     /**
     * Patterns used to filter display data.
     */
-    std::vector<Pattern*> _pattern ;
-
-    /**
-    * Root scope.
-    */
-    Scope* _rootScope ;
-
-    /**
-    * Root logger. The root logger contains all scopes for the thread.
-    */
-    Logger* _rootLogger ;
-
-    /**
-     * Thread identifier.
-     */
-    ThreadData* _threadData ;
+    std::vector<Pattern*> pattern_ ;
 
 
     /**
     * List of loggers to display.
     */
-    static std::list<Logger*>* _loggers ;
-
-    /**
-    * Current root logger for the thread.
-    */
-    static __thread Logger* _threadRootLogger ;
+    static std::list<Logger*>* loggers_ ;
 
 
     /**
-    * Indicates wether instruments trace each call to standard output
+    * Root logger for the thread, displays entry/exits of functions
     */
-    static __thread bool _threadLogMessagesFlag ;
+    static Logger* rootLogger_ ;
 
+    /**
+    * Indicates wether instruments trace entry/exit call to standard output
+    */
+    bool trace_ ;
+
+
+    /**
+     * Output filename for logger.
+     */
+    std::string filename_ ;
 
     /**
     * Internal tabs counter for logger display.
     */
-    static __thread int _threadLogTabs ;
+    int tab_ ;
 
     /**
     * Buffer indicating existence of child for displaying tree.
     */
-    static __thread std::vector<bool>* _threadScopeChildExist ;
+//    static __thread std::vector<bool>* threadScopeChildExist_ ;
 
     /**
-    * Test if a name must be filtered.
+    * Test if a name must be filtered inside this logger context.
     * @name_ string to be filtered.
-    * @logger_ Logger containing the list of patterns to test.
     * @return true if name must be filtered, false else.
     */
-    static bool isFiltered(const std::string& name_, Logger* logger_)
+    bool isFiltered(const std::string& name_)
         __attribute__((no_instrument_function)) ;
 
     /**
-    * Write the entire stats to a file.
+    * Write the scope entry on stdout.
+    * @param scope_ Scope to log.
     */
-    static void logStats()
+    void logScopeEntry(Scope* scope_)
+        __attribute__((no_instrument_function)) ;
+
+    /**
+    * Write the scope exit on stdout.
+    * @param scope_ Scope to log.
+    */
+    void logScopeExit(Scope* scope_)
+        __attribute__((no_instrument_function)) ;
+
+    /**
+    * Write the logger.
+    */
+    void log()
         __attribute__((no_instrument_function)) ;
 
     /**
     * Add a column to a logger.
     * @param type_ type of the column to add.
-    * @param logger_ Destination logger.
     */
-    static void addColumn(Column::ColEnum type_, Logger* logger_)
+    void addColumn(Column::ColEnum type_)
         __attribute__((no_instrument_function)) ;
 
-    static void printTabs(int tabNum_)
-         __attribute__((no_instrument_function)) ;
-    static void printEntryExit(bool entry_)
-         __attribute__((no_instrument_function)) ;
-    static void printTree(Scope* data_)
-         __attribute__((no_instrument_function)) ;
-
 private:
+
+    struct LogScopeData
+    {
+        std::string name ;
+        std::string source ;
+        void* address ;
+        uint64_t id ;
+        uint64_t parentId ;
+        uint64_t call ;
+    } ;
+
     /**
     * Recursivity depth for tree logging.
     */
-    static __thread int _threadDepth ;
+    static thread_local int threadTab_ ;
 
+
+    // this is pretty nasty but avoid infinite loop because called from default constructor
+    Logger(bool) ;
 
     /**
-    * Log titles.
+    * Log Columns content to stream.
     * @param logger_ Logger containing data.
     * @param fout_ Stream to log to.
     */
-    static void logColumns(Logger* logger_, std::ostream &fout_)
+    void logColumns(std::ostream &fout_)
         __attribute__((no_instrument_function)) ;
+
+    /**
+    * Add the scope data logger columns.
+    * @param _data Scope data to add.
+    * @param scope_ Scope to output.
+    * @param fout_ Stream to output to.
+    */
+    void logScope(LogScopeData* _data)
+        __attribute__((no_instrument_function)) ;
+
+
+
+    /**
+    * Log scopes to a stream with a raw output.
+    * @param fout_ Stream to log to.
+    */
+    void logRawScopes(Scope* _scope)
+        __attribute__((no_instrument_function)) ;
+
+    /**
+    * Log scopes to a stream with a raw output recursively.
+    * @param fout_ Stream to log to.
+    */
+    void recursiveLogRawScopes(Scope* _scope)
+        __attribute__((no_instrument_function)) ;
+
+
 
     /**
     * Log globals scopes to a stream
@@ -230,15 +278,6 @@ private:
     * @param fout_ Stream to log to.
     */
     static void logGlobalScopes(Logger* logger_, ThreadData* thread_, std::ostream &fout_)
-        __attribute__((no_instrument_function)) ;
-
-    /**
-    * Log the scope data to output stream.
-    * @param logger_ Logger containing data.
-    * @param scope_ Scope to output.
-    * @param fout_ Stream to output to.
-    */
-    static void logScope(Logger* logger_, Scope* scope_, std::ostream& fout_)
         __attribute__((no_instrument_function)) ;
 
     /**
@@ -281,11 +320,20 @@ private:
     * @param stats_ Memory stats for scope.
     * @param fout_ Stream to output to.
     */
-    static void logOwnerBlock(Logger* logger_, Scope* scope_, Scope::MemStats* stats_, std::ostream& fout_)
-        __attribute__((no_instrument_function)) ;
+//    static void logOwnerBlock(Logger* logger_, Scope* scope_, Scope::MemStats* stats_, std::ostream& fout_)
+//        __attribute__((no_instrument_function)) ;
+
+    static void printTabs(int tabNum_)
+         __attribute__((no_instrument_function)) ;
+    static void printEntryExit(bool entry_)
+         __attribute__((no_instrument_function)) ;
+    static void printTree(Scope* data_)
+         __attribute__((no_instrument_function)) ;
+
 
 } ;
 
+}
 
 
 #endif

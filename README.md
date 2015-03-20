@@ -1,19 +1,20 @@
 ftrace
 ======
 
-Thread safe gcc function entry/exit tracer 
+The ftrace tool is Thread safe gcc function entry/exit and memory tracer.  
 
 Getting started
 =====
 
 ftrace is a small helper designed for gcc users on Linux x86 platforms.
-This tool has 3 main purposes:
+This tool has several purposes:
   * tracing entry/exit of functions during runtime,
-  * reverse engineering by providing per thread call graph output,
-  * helping in optimizations by detecting critical code. 
+  * reverse engineering by providing per process and thread call graph output,
+  * helping in optimizations by detecting critical code
+  * detecting and solving memory leak 
 
-Using a debugger is useful in many cases but can be very painful when using pieces of software written by another team. Often to understand code one adds a lot of trace everywhere, although being very time consuming is not very helpful with very huge code. This tool was mainly created to speed up this task by having a good overview of internal behavior with just few modifications on makefiles. 
-Impact on performances is not null but remains acceptable in most cases.
+Using static analysis tools to extract call graphs is often useful to understand the behavior of easy to complex pieces of code. One may also add traces or use profiling tools to extract runtime informations. Ftrace is another way to extract useful informations at runtime and can be managed directly from source code.
+Note: This tool has been written for debug environment, it is not intended to be used at runtime. Impact on performances is not null but still remains acceptable in most cases. 
 
 How does it work
 =====
@@ -146,7 +147,7 @@ Installing ftrace
 
 For debian only you can install lib on system by using:
 
-    ./install.sh
+    ./build install
     
 for other systems just copy `libftrace.so` inside system libdirectory or simply call "`make install`", the library libftrace.so will be added on `/lib`.
 

@@ -25,16 +25,38 @@
 #include "com/ThreadData.h"
 #include "log/Logger.h"
 
-pthread_mutex_t ThreadData::_globalMutex ;
 
-std::list<ThreadData*>* ThreadData::_threads=NULL ;
-__thread ThreadData* ThreadData::_threadData=NULL ;
-unsigned long long ThreadData::_threadCounter=0 ;
+using namespace ftrace ;
 
 //-----------------------------------------------------------------------------
+pthread_mutex_t ThreadData::globalMutex_ ;
+std::list<ThreadData*>* ThreadData::threads_=nullptr ;
+size_t ThreadData::count_=0 ;
+thread_local ThreadData* ftrace::threadData=nullptr ;
+static thread_local ThreadLiveSpy threadSpy ;
+//-----------------------------------------------------------------------------
 ThreadData::ThreadData()
+    : endTime_(0)
 {
 	initLock() ;
+
+	startTime_ = Timing::getTime() ;
+
+    globalLock() ;
+    if(threads_==nullptr)
+        threads_ = new std::list<ThreadData*> ;
+    threads_->push_back(this) ;
+    number_ = count_ ;
+    count_++ ;
+    globalUnlock() ;
+
+    id_ = pthread_self() ;
+    scopes_ = new std::map<void*,  Scope*> ;
+    scopeStack_ = new std::stack<Scope*> ;
+
+    rootScope_ = new Scope(nullptr) ;
+    scopeStack_->push(rootScope_) ;
+    currScope_ = rootScope_ ;
 }
 
 //-----------------------------------------------------------------------------
@@ -43,12 +65,12 @@ void ThreadData::initLock()
 	bool initGlobal=false ;
 
 	//Init thread mutex
-	pthread_mutex_init(&_mutex, NULL) ;
+	pthread_mutex_init(&mutex_, NULL) ;
 
 	if(initGlobal==false)
 	{
 		//Init global mutex
-		pthread_mutex_init(&_globalMutex, NULL) ;
+		pthread_mutex_init(&globalMutex_, NULL) ;
 
 		initGlobal = true ;
 	}
@@ -58,26 +80,40 @@ void ThreadData::initLock()
 void ThreadData::lock()
 {
     //printf("%ld lock\n", pthread_self()) ;
-	pthread_mutex_lock(&_mutex) ;
+	pthread_mutex_lock(&mutex_) ;
 }
 
 //-----------------------------------------------------------------------------
 void ThreadData::unlock()
 {
     //printf("%ld unlock\n", pthread_self()) ;
-	pthread_mutex_unlock(&_mutex) ;
+	pthread_mutex_unlock(&mutex_) ;
 }
 
 //-----------------------------------------------------------------------------
 void ThreadData::globalLock()
 {
     //printf("%ld globalLock\n", pthread_self()) ;
-	pthread_mutex_lock(&_globalMutex) ;
+	pthread_mutex_lock(&globalMutex_) ;
 }
 
 //-----------------------------------------------------------------------------
 void ThreadData::globalUnlock()
 {
     //printf("%ld globalUnlock\n", pthread_self()) ;
-	pthread_mutex_unlock(&_globalMutex) ;
+	pthread_mutex_unlock(&globalMutex_) ;
 }
+
+//-----------------------------------------------------------------------------
+ThreadLiveSpy::ThreadLiveSpy()
+{
+}
+
+//-----------------------------------------------------------------------------
+ThreadLiveSpy::~ThreadLiveSpy()
+{
+    // the destructor is called when thread is dying
+    // add thread destruction time
+    threadData->endTime_ = Timing::getTime() ;
+}
+

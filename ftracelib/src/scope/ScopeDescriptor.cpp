@@ -25,11 +25,7 @@
 
 using namespace ftrace ;
 
-std::map<void*,  ScopeDescriptor*>* ScopeDescriptor::descriptors_=nullptr ;
-
 ScopeDescriptor::ScopeDescriptor()
     : address_(nullptr)
 {
-    if(descriptors_==nullptr)
-        descriptors_ = new std::map<void*,  ScopeDescriptor*> ;
 }

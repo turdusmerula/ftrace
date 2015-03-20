@@ -28,6 +28,8 @@ MA 02110-1301, USA.
 #include <string.h>
 #include <signal.h>
 
+using namespace ftrace ;
+
 /*
  * These routines do their printing without using stdio. Stdio can't
  * be used because it calls malloc(). Internal routines of a malloc()
@@ -40,7 +42,7 @@ MA 02110-1301, USA.
  */
 #define	NUMBER_BUFFER_SIZE	(sizeof(ef_number) * NBBY)
 
-void printNumber(ef_number number, ef_number base)
+void ftrace::printNumber(ef_number number, ef_number base)
 {
 	char		buffer[NUMBER_BUFFER_SIZE];
 	char *		s = &buffer[NUMBER_BUFFER_SIZE];
@@ -67,7 +69,7 @@ void printNumber(ef_number number, ef_number base)
 		write(2, s, size);
 }
 
-void vprint(const char * pattern, va_list args)
+void ftrace::vprint(const char * pattern, va_list args)
 {
 	static const char	bad_pattern[] =
 	 "\nBad pattern specifier %%%c in EF_Print().\n";
@@ -150,7 +152,7 @@ void vprint(const char * pattern, va_list args)
 	}
 }
 
-void Abort(const char* pattern, ...)
+void ftrace::Abort(const char* pattern, ...)
 {
 	va_list	args;
 
@@ -172,7 +174,7 @@ void Abort(const char* pattern, ...)
 	_exit(-1);
 }
 
-void Exit(const char * pattern, ...)
+void ftrace::Exit(const char * pattern, ...)
 {
 	va_list	args;
 
@@ -191,7 +193,7 @@ void Exit(const char * pattern, ...)
 	_exit(-1);
 }
 
-void Print(const char * pattern, ...)
+void ftrace::Print(const char * pattern, ...)
 {
 	va_list	args;
 
