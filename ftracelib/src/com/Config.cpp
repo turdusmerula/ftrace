@@ -51,31 +51,16 @@ bool Config::loadConfFile(const std::string &filename_)
     		"%Source|"
     		"%Call|"
     		"%TotalTime|"
-    		"%AvgTime|"
     		"%TotalScopeTime|"
+    		"%AvgTime|"
     		"%AvgScopeTime|"
     		"%InstTotalTime|"
     		"%InstAvgTime|"
     		"%InstTotalScopeTime|"
     		"%InstAvgScopeTime|"
-    		"%RealTotalTime|"
-    		"%RealAvgTime|"
-    		"%RealScopeTime|"
-    		"%RealAvgScopeTime|"
-    		"%AllocSize|"
-    		"%AllocNum|"
-    		"%TotalAllocTime|"
-    		"%FreeNum|"
-    		"%AllocSource"
     		")", boost::regex_constants::extended) ;
     boost::regex reComment("#.*", boost::regex_constants::extended) ;
     boost::regex reSpace("^[ \t\n\r]*$", boost::regex_constants::extended) ;
-//    boost::regex reManager("manager=(efence|simple|none)", boost::regex_constants::extended) ;
-//    boost::regex reEF_ALIGNMENT("EF_ALIGNMENT=[0-9]+", boost::regex_constants::extended) ;
-//    boost::regex reEF_PROTECT_FREE("EF_PROTECT_FREE=(true|false)", boost::regex_constants::extended) ;
-//    boost::regex reEF_PROTECT_BELOW("EF_PROTECT_BELOW=(true|false)", boost::regex_constants::extended) ;
-//    boost::regex reEF_ALLOW_MALLOC_0("EF_ALLOW_MALLOC_0=(true|false)", boost::regex_constants::extended) ;
-//    boost::regex reEF_FREE_WIPES("EF_FREE_WIPES=(true|false)", boost::regex_constants::extended) ;
 
     //Matches for the pattern
     boost::cmatch matches ;
@@ -120,7 +105,7 @@ bool Config::loadConfFile(const std::string &filename_)
 
             if(boost::regex_match(buff, matches, reCategory))
             {
-                printf("------ reCategory !! ------\n") ;
+                //printf("------ reCategory !! ------\n") ;
                 if(matches[1]=="global")
                     currLogger = Logger::rootLogger_ ;
                 else
@@ -131,14 +116,14 @@ bool Config::loadConfFile(const std::string &filename_)
             }
             else if(boost::regex_match(buff, matches, reFile))
             {
-                printf("------ reFile !! ------\n") ;
+                //printf("------ reFile !! ------\n") ;
 
                 if(matches[1]!="")
                     currLogger->filename_ = matches[1];
             }
             else if(boost::regex_match(buff, matches, reType))
             {
-                printf("------ reType !! ------\n") ;
+                //printf("------ reType !! ------\n") ;
                 if(matches[1]=="tree")
                     currLogger->logType_ = Logger::eTree ;
                 else if(matches[2]=="flat")
@@ -148,7 +133,7 @@ bool Config::loadConfFile(const std::string &filename_)
             }
             else if(boost::regex_match(buff, matches, reTiming))
             {
-                printf("------ reTiming !! ------\n") ;
+                //printf("------ reTiming !! ------\n") ;
                 if(matches[1]=="auto")
                     currLogger->timing_ = Timing::eAuto ;
                 else if(matches[2]=="second")
@@ -159,7 +144,7 @@ bool Config::loadConfFile(const std::string &filename_)
             }
             else if(boost::regex_match(buff, matches, reScope))
             {
-                printf("------ reScope !! ------\n") ;
+                //printf("------ reScope !! ------\n") ;
                 if(matches[1]=="process")
                     currLogger->logScope_ = Logger::eProcess ;
                 else
@@ -167,14 +152,14 @@ bool Config::loadConfFile(const std::string &filename_)
             }
             else if(boost::regex_match(buff, matches, reTrace))
             {
-                printf("------ reTrace !! ------\n") ;
+                //printf("------ reTrace !! ------\n") ;
                 //Set trace mode on/off (off is default)
                 if(matches[1]=="true")
                     Logger::rootLogger_->trace_ = true ;
             }
             else if(boost::regex_match(buff, matches, rePattern))
             {
-                printf("------ rePattern !! ------\n") ;
+                //printf("------ rePattern !! ------\n") ;
                 //Add an ignore/include pattern to current logger
                 Pattern* pattern=new Pattern ;
                 if(matches[1]=="ignore")
@@ -186,7 +171,7 @@ bool Config::loadConfFile(const std::string &filename_)
             }
             else if(boost::regex_match(buff, matches, reColumns))
             {
-                printf("------ reLogger !! ------\n") ;
+                //printf("------ reLogger !! ------\n") ;
 
                 typedef boost::tokenizer<boost::char_separator<char> > tokenizer ;
                 boost::char_separator<char> sep("%") ;
@@ -197,67 +182,48 @@ bool Config::loadConfFile(const std::string &filename_)
                     std::string col="%"+*tok_iter ; //.substr(0, 2) ;
 
                     boost::trim(col) ;
-                    printf("------ columns: %s !! ------\n", col.c_str()) ;
+                    //printf("------ columns: %s !! ------\n", col.c_str()) ;
 
                     if(col=="%Call")
                         currLogger->addColumn(Column::eCall) ;
-//                    else if(col=="%Name" && currLogger->logType_!=Logger::eTree)
-//                        currLogger->addColumn(Column::eTreeName) ;
+                    else if(col=="%Name" && currLogger->logType_!=Logger::eTree)
+                        currLogger->addColumn(Column::eTreeName) ;
                     else if(col=="%Name")
                         currLogger->addColumn(Column::eName) ;
                     else if(col=="%Source")
                         currLogger->addColumn(Column::eSource) ;
-//                    else if(col=="%TotalTime")
-//                        currLogger->addColumn(Column::eTotalTime) ;
-//                    else if(col=="%AvgTime")
-//                        currLogger->addColumn(Column::eAvgTime) ;
-//                    else if(col=="%TotalScopeTime")
-//                        currLogger->addColumn(Column::eTotalScopeTime) ;
-//                    else if(col=="%AvgScopeTime")
-//                        currLogger->addColumn(Column::eAvgScopeTime) ;
-//                    else if(col=="%InstTotalTime")
-//                        currLogger->addColumn(Column::eInstTotalTime) ;
-//                    else if(col=="%InstAvgTime")
-//                        currLogger->addColumn(Column::eInstAvgTime) ;
-//                    else if(col=="%InstTotalScopeTime")
-//                        currLogger->addColumn(Column::eInstTotalScopeTime) ;
-//                    else if(col=="%InstAvgScopeTime")
-//                        currLogger->addColumn(Column::eInstAvgScopeTime) ;
-//                    else if(col=="%RealTotalTime")
-//                        currLogger->addColumn(Column::eRealTotalTime) ;
-//                    else if(col=="%RealAvgTime")
-//                        currLogger->addColumn(Column::eRealAvgTime) ;
-//                    else if(col=="%Address")
-//                        currLogger->addColumn(Column::eAddress) ;
-//                    else if(col=="%Source")
-//                        currLogger->addColumn(Column::eSource) ;
-//                    else if(col=="%AllocSize")
-//                        currLogger->addColumn(Column::eAllocSize) ;
-//                    else if(col=="%AllocNum")
-//                        currLogger->addColumn(Column::eAllocNum) ;
-//                    else if(col=="%TotalAllocTime")
-//                        currLogger->addColumn(Column::eTotalAllocTime) ;
-//                    else if(col=="%FreeNum")
-//                        currLogger->addColumn(Column::eFreeNum) ;
-//                    else if(col=="%AllocSource")
-//                        currLogger->addColumn(Column::eAllocSource) ;
+                    else if(col=="%TotalTime")
+                        currLogger->addColumn(Column::eTotalTime) ;
+                    else if(col=="%AvgTime")
+                        currLogger->addColumn(Column::eAvgTime) ;
+                    else if(col=="%TotalScopeTime")
+                        currLogger->addColumn(Column::eTotalScopeTime) ;
+                    else if(col=="%AvgScopeTime")
+                        currLogger->addColumn(Column::eAvgScopeTime) ;
+                    else if(col=="%InstTotalTime")
+                        currLogger->addColumn(Column::eInstTotalTime) ;
+                    else if(col=="%InstAvgTime")
+                        currLogger->addColumn(Column::eInstAvgTime) ;
+                    else if(col=="%InstTotalScopeTime")
+                        currLogger->addColumn(Column::eInstTotalScopeTime) ;
+                    else if(col=="%InstAvgScopeTime")
+                        currLogger->addColumn(Column::eInstAvgScopeTime) ;
+                    else if(col=="%Address")
+                        currLogger->addColumn(Column::eAddress) ;
+                    else if(col=="%Source")
+                        currLogger->addColumn(Column::eSource) ;
                     else
                         fprintf(stderr, "Syntax error at line %d, incorrect column %s !\n", line, col.c_str()) ;
                 }
             }
-//            else if(boost::regex_match(buff, matches, reManager))
-//            {
-//            	//Memory manager
-//
-//            }
             else if(boost::regex_match(buff, matches, reComment))
             {
-                printf("------ reComment !! ------\n") ;
+                //printf("------ reComment !! ------\n") ;
                 //Nothing to do with comments
             }
             else if(boost::regex_match(buff, matches, reSpace))
             {
-                printf("------ reSpace !! ------\n") ;
+                //printf("------ reSpace !! ------\n") ;
                 //Nothing to do with empty lines
             }
             else

@@ -24,7 +24,7 @@
 #include "com/Demangling.h"
 
 #include <stdlib.h>
-#include "demangle.h"
+#include "libiberty/demangle.h"
 
 using namespace ftrace ;
 

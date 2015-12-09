@@ -116,6 +116,7 @@ public:
 
     /**
      * Get thread mutex.
+     * This mutex has no impact on the thread unless it is used inside ftrace to force threads to pause (for example to log statistics).
      */
     void lock()
     	__attribute__((no_instrument_function)) ;

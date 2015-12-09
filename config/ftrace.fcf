@@ -51,30 +51,17 @@
 # %Call 				: Number of call
 
 # %TotalTime			: Total time elapsed in calls
-# %AvgTime 				: Average time of call
 # %TotalScopeTime		: Total time elapsed in scope without time in sub-scopes
+# %AvgTime 				: Average time of one call
 # %AvgScopeTime 		: Average time elapsed in scope without average time in sub-scopes
-# %InstTotalTime		: Total time elapsed in instrument's code
-# %InstAvgTime 			: Average time elapsed in instrument's code
-# %InstTotalScopeTime 	: Undocumented
-# %InstAvgScopeTime 	: Undocumented
-# %RealTotalTime
-# %RealAvgTime
-# %RealScopeTime 		: Real time elapsed in scope without time elapsed in instrument code
-# %RealAvgScopeTime 	: Average time elapsed in scope without average time elapsed
-# %AllocSize			: 
-# %AllocNum 			: 
-# %TotalAllocTime		: 
-# %FreeNum 				:
-# %AllocSource 			:
 
 [logger]
 	# for raw logger all other options are ignored
-	file=/tmp/trace-raw
+	file=trace-raw
 	type=raw
 
 [logger]
-	file=/tmp/trace-process
+	file=trace-process
 	type=tree
 	timing=auto
 	scope=process
@@ -85,7 +72,7 @@
 
 [logger]
 	# if the same filename is given data is appended to the end of file
-	file=/tmp/trace-process
+	file=trace-process
 	type=flat
 	timing=auto
 	scope=process
@@ -96,7 +83,7 @@
 
 
 [logger]
-	file=/tmp/trace-thread
+	file=trace-thread
 	type=tree
 	timing=auto
 	scope=thread
@@ -107,7 +94,7 @@
 
 [logger]
 	# if the same filename is given data is appended to the end of file
-	file=/tmp/trace-thread
+	file=trace-thread
 	type=flat
 	timing=auto
 	scope=thread

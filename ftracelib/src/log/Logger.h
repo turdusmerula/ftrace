@@ -51,17 +51,11 @@ struct Column
                     eParentId,      // parent scope id
                     eId,            // unique id of the scope
                     eCall,          // total number of calls
-//                    eTreeName,
-//                    eTotalTime, eAvgTime,              //Total time elapsed for scope
-//                    eTotalScopeTime, eAvgScopeTime,    //Total time in scope only
-//                    eInstTotalTime, eInstAvgTime,      //Total time in instrument
-//                    eInstTotalScopeTime, eInstAvgScopeTime, //Total time in instrument for scope
-//                    eRealTotalTime, eRealAvgTime,      //Real total time elapsed for scope (total time without time elapsed in instrument)
-//                    eAllocSize,                         //Total amount of memory allocated
-//                    eAllocNum,                          //Number of memory blocks allocated
-//                    eTotalAllocTime,                    //Total Time elapsed in alloc
-//                    eFreeNum,                           //Number of blocs freeds
-//                    eAllocSource,                       //Source scopes of freed memory
+                    eTreeName,
+                    eTotalTime, eAvgTime,              //Total time elapsed for scope
+                    eTotalScopeTime, eAvgScopeTime,    //Total time in scope only
+                    eInstTotalTime, eInstAvgTime,      //Total time in instrument
+                    eInstTotalScopeTime, eInstAvgScopeTime, //Total time in instrument for scope
                     eError
                 } ColEnum ;
 
@@ -225,6 +219,13 @@ private:
         uint64_t id ;
         uint64_t parentId ;
         uint64_t call ;
+
+        uint64_t time_ ;
+        uint64_t avgTime_ ;
+        uint64_t scopeTime_ ;
+        uint64_t avgScopeTime_ ;
+        uint64_t instTime_ ;
+        uint64_t avgInstTime_ ;
     } ;
 
     /**

@@ -177,9 +177,7 @@ void __cyg_profile_func_enter(void* this_fn, void* call_site)
     threadData->currScope_->processData_->callNum_++ ;
 
     //Function entry print
-    ThreadData::globalLock() ;
     Logger::rootLogger_->logScopeEntry(threadData->currScope_) ;
-    ThreadData::globalUnlock() ;
 
     //Add time spend inside instrument
     uint64_t diffProfTime=Timing::getTime()-profTime ;
@@ -231,9 +229,7 @@ void __cyg_profile_func_exit(void *this_fn, void *call_site)
     threadData->currScope_->data_->currTime_ = diffTime ;
 
     // Function exit print
-    ThreadData::globalLock() ;
     Logger::rootLogger_->logScopeExit(threadData->currScope_) ;
-    ThreadData::globalUnlock() ;
 
     //Pop scope data from stack
     threadData->scopeStack_->pop() ;

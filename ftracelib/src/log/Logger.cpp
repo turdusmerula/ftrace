@@ -31,6 +31,7 @@
 #include <iomanip>
 #include <iostream>
 #include <inttypes.h>
+#include <mutex>
 
 using namespace ftrace ;
 
@@ -167,6 +168,10 @@ void Logger::log()
                 logRawScopes(thread->rootScope_) ;
                 logColumns(fout) ;
                 break ;
+            case eTree:
+                logRawScopes(thread->rootScope_) ;
+                logColumns(fout) ;
+                break ;
             }
 //            if((*ilogger)->_treeLog==false)
 //            {
@@ -231,70 +236,42 @@ void Logger::addColumn(Column::ColEnum _type)
         col->type_ = Column::eCall ;
         col->title_ = "Calls" ;
         break ;
-//    case Column::eTreeName:
-//        col->type_ = Column::eTreeName ;
-//        col->title_ = "Name" ;
-//        break ;
-//    case Column::eTotalTime:
-//        col->type_ = Column::eTotalTime ;
-//        col->title_ = "TotalTime" ;
-//        break ;
-//    case Column::eAvgTime:
-//        col->type_ = Column::eAvgTime ;
-//        col->title_ = "AvgTime" ;
-//        break ;
-//    case Column::eTotalScopeTime:
-//        col->type_ = Column::eTotalScopeTime ;
-//        col->title_ = "TotalScopeTime" ;
-//        break ;
-//    case Column::eAvgScopeTime:
-//        col->type_ = Column::eAvgScopeTime ;
-//        col->title_ = "AvgScopeTime" ;
-//        break ;
-//    case Column::eInstTotalTime:
-//        col->type_ = Column::eInstTotalTime ;
-//        col->title_ = "InstTotalTime" ;
-//        break ;
-//    case Column::eInstAvgTime:
-//        col->type_ = Column::eInstAvgTime ;
-//        col->title_ = "InstAvgTime" ;
-//        break ;
-//    case Column::eInstTotalScopeTime:
-//        col->type_ = Column::eInstTotalScopeTime ;
-//        col->title_ = "InstTotalScopeTime" ;
-//        break ;
-//    case Column::eInstAvgScopeTime:
-//        col->type_ = Column::eInstAvgScopeTime ;
-//        col->title_ = "InstAvgScopeTime" ;
-//        break ;
-//    case Column::eRealTotalTime:
-//        col->type_ = Column::eRealTotalTime ;
-//        col->title_ = "RealTotalTime" ;
-//        break ;
-//    case Column::eRealAvgTime:
-//        col->type_ = Column::eRealAvgTime ;
-//        col->title_ = "RealAvgTime" ;
-//        break ;
-//    case Column::eAllocSize:
-//        col->type_ = Column::eAllocSize ;
-//        col->title_ = "AllocSize" ;
-//        break ;
-//    case Column::eAllocNum:
-//        col->type_ = Column::eAllocNum ;
-//        col->title_ = "AllocNum" ;
-//        break ;
-//    case Column::eTotalAllocTime:
-//        col->type_ = Column::eTotalAllocTime ;
-//        col->title_ = "TotalAllocTime" ;
-//        break ;
-//    case Column::eFreeNum:
-//        col->type_ = Column::eFreeNum ;
-//        col->title_ = "FreeNum" ;
-//        break ;
-//    case Column::eAllocSource:
-//        col->type_ = Column::eAllocSource ;
-//        col->title_ = "AllocSource" ;
-//        break ;
+    case Column::eTreeName:
+        col->type_ = Column::eTreeName ;
+        col->title_ = "Name" ;
+        break ;
+    case Column::eTotalTime:
+        col->type_ = Column::eTotalTime ;
+        col->title_ = "TotalTime" ;
+        break ;
+    case Column::eAvgTime:
+        col->type_ = Column::eAvgTime ;
+        col->title_ = "AvgTime" ;
+        break ;
+    case Column::eTotalScopeTime:
+        col->type_ = Column::eTotalScopeTime ;
+        col->title_ = "TotalScopeTime" ;
+        break ;
+    case Column::eAvgScopeTime:
+        col->type_ = Column::eAvgScopeTime ;
+        col->title_ = "AvgScopeTime" ;
+        break ;
+    case Column::eInstTotalTime:
+        col->type_ = Column::eInstTotalTime ;
+        col->title_ = "InstTotalTime" ;
+        break ;
+    case Column::eInstAvgTime:
+        col->type_ = Column::eInstAvgTime ;
+        col->title_ = "InstAvgTime" ;
+        break ;
+    case Column::eInstTotalScopeTime:
+        col->type_ = Column::eInstTotalScopeTime ;
+        col->title_ = "InstTotalScopeTime" ;
+        break ;
+    case Column::eInstAvgScopeTime:
+        col->type_ = Column::eInstAvgScopeTime ;
+        col->title_ = "InstAvgScopeTime" ;
+        break ;
     default:
         col->type_ = Column::eError ;
         col->title_ = "##ERROR##" ;
@@ -313,6 +290,8 @@ void Logger::logRawScopes(Scope* _scope)
     addColumn(Column::eId) ;
     addColumn(Column::eParentId) ;
     addColumn(Column::eCall) ;
+    addColumn(Column::eTotalTime) ;
+    addColumn(Column::eTotalScopeTime) ;
 
     recursiveLogRawScopes(_scope) ;
 }
@@ -327,6 +306,7 @@ void Logger::recursiveLogRawScopes(Scope* _scope)
         data.name = _scope->descriptor_->name_ ;
         data.source = _scope->descriptor_->mangledName_ ;
         data.address = _scope->descriptor_->address_ ;
+
         data.id = _scope->id_ ;
         if(_scope->parentScope_)
             data.parentId = _scope->parentScope_->id_ ;
@@ -335,7 +315,11 @@ void Logger::recursiveLogRawScopes(Scope* _scope)
 
         data.call = _scope->data_->callNum_ ;
 
-        logScope(&data) ;
+        data.time_ = 0 ;
+        data.scopeTime_ = 0 ;
+        data.instTime_ = 0 ;
+
+		logScope(&data) ;
     }
 
     for(auto& scope : *_scope->childs_)
@@ -428,6 +412,9 @@ void Logger::logScope(LogScopeData* _data)
             break ;
         case Column::eName:
             col->lines_.push_back(_data->name) ;
+            break ;
+        case Column::eTotalTime:
+            col->lines_.push_back(boost::lexical_cast<std::string>(Timing::computeTime(_data->time_, timing_))) ;
             break ;
 //        case Column::eTreeName:
 //            if(scope_->_globalScope!=NULL)
@@ -761,8 +748,12 @@ void Logger::printEntryExit(bool entry_)
 
 void Logger::logScopeEntry(Scope* _scope)
 {
-    if(trace_==false || _scope->descriptor_==nullptr || _scope->descriptor_->filter_==true)
+	static std::mutex print_mutex;
+
+	if(trace_==false || _scope->descriptor_==nullptr || _scope->descriptor_->filter_==true)
         return ;
+
+	print_mutex.lock() ;
 
     printf("%lu\t|", (uint64_t)threadData->number_) ;
     printEntryExit(true) ;
@@ -785,6 +776,7 @@ void Logger::logScopeEntry(Scope* _scope)
             ) ;
     }
 
+	print_mutex.unlock() ;
 }
 //-----------------------------------------------------------------------------
 
