@@ -14,6 +14,7 @@ This tool has several purposes:
   * detecting and solving memory leak 
 
 Using static analysis tools to extract call graphs is often useful to understand the behavior of easy to complex pieces of code. One may also add traces or use profiling tools to extract runtime informations. Ftrace is another way to extract useful informations at runtime and can be managed directly from source code.
+
 Note: This tool has been written for debug environment, it is not intended to be used at runtime. Impact on performances is not null but still remains acceptable in most cases. 
 
 How does it work
