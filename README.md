@@ -161,4 +161,4 @@ Ftrace provides a dynamic library `libftrace.so` containing the the instrument. 
 Export the `LD_PRELOAD` environment variable to `libftrace.so` and the `FTRACE` to the configuration file path:
 
     export LD_PRELOAD=libftrace.so
-    export GSCOPELOG=ftrace.fcf
+    export FTRACE=ftrace.fcf
