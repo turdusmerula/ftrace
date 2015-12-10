@@ -48,11 +48,6 @@ public:
     */
     uint64_t scopeTime_ ;
 
-    /**
-    * Time elpased in instrument for scope called.
-    */
-    uint64_t instTime_ ;
-
 
     /**
     * Calls number for the scope.

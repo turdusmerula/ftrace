@@ -43,15 +43,13 @@ thread_local int Logger::threadTab_=0 ;
 
 Logger::Logger()
     :   root_(false),
-        logType_(eTree),
-        logScope_(eThread),
         timing_(Timing::eAuto),
         trace_(false),
         tab_(0)
 {
     if(loggers_==nullptr)
         loggers_ = new std::list<Logger*> ;
-    loggers_->push_back(this) ;
+//    loggers_->push_back(this) ;
 
     if(rootLogger_==nullptr)
     {
@@ -65,30 +63,11 @@ Logger::Logger()
 //-----------------------------------------------------------------------------
 Logger::Logger(bool)
     :   root_(false),
-        logType_(eTree),
-        logScope_(eThread),
         timing_(Timing::eAuto),
         trace_(true),
         tab_(0)
 {
 }
-
-
-//    //Initialize logguer
-//    std::string logFile=string((getenv("FTRACE")==NULL?"":getenv("FTRACE"))) ;
-//    if(logFile=="true")
-//    {
-//      Logger::_threadLogMessagesFlag = true ;
-//    }
-//    else if(logFile!="")
-//    {
-//      Config::loadConfFile(logFile) ;
-//    }
-//    else
-//    {
-//      Logger::_threadLogMessagesFlag = false ;
-//    }
-//
 
 //-----------------------------------------------------------------------------
 bool Logger::isFiltered(const std::string& name_)
@@ -129,12 +108,6 @@ void Logger::log()
 	}
 
 
-	//Init datas
-//    if(Logger::_threadScopeChildExist==NULL)
-//    {
-//        _threadScopeChildExist = new std::vector<bool>() ;
-//    }
-
 	//Output file creation
 	std::string filename ;
 
@@ -145,49 +118,18 @@ void Logger::log()
 	filename += Timing::getDate() ;
 	filename += "_" ;
 	filename += __progname ;
-	filename += ".stats" ;
+    if(format_==eText)
+		filename += ".stats" ;
+    else
+		filename += ".json" ;
 
     std::ofstream fout ;
     fout.open(filename.c_str(), std::ios::out) ;
 
-    if(logScope_==eProcess)
-    {
-    }
+    if(format_==eText)
+    	logTextScopes(fout) ;
     else
-    {
-        for(auto& thread : *ThreadData::threads_)
-        {
-            fout << "_______________________________________________________________________________" << std::endl  ;
-            fout << "Thread " <<  thread->id_ << std::endl << std::endl ;
-
-            tab_ = 0 ;
-
-            switch(logType_)
-            {
-            case eRaw:
-                logRawScopes(thread->rootScope_) ;
-                logColumns(fout) ;
-                break ;
-            case eTree:
-                logRawScopes(thread->rootScope_) ;
-                logColumns(fout) ;
-                break ;
-            }
-//            if((*ilogger)->_treeLog==false)
-//            {
-//                Scope::computeGlobalScopes((*ilogger)->_threadData) ;
-//                Logger::logGlobalScopes(*ilogger, (*ilogger)->_threadData, fout) ;
-//                Logger::logColumns(*ilogger, fout) ;
-//            }
-//            else
-//            {
-//                Logger::logTreeScopes(*ilogger, fout) ;
-//                Logger::logColumns(*ilogger, fout) ;
-//            }
-            fout << std::endl << std::endl << std::endl ;
-
-        }
-    }
+    	logJsonScopes(fout) ;
 
     fout.close() ;
 
@@ -236,41 +178,9 @@ void Logger::addColumn(Column::ColEnum _type)
         col->type_ = Column::eCall ;
         col->title_ = "Calls" ;
         break ;
-    case Column::eTreeName:
-        col->type_ = Column::eTreeName ;
-        col->title_ = "Name" ;
-        break ;
-    case Column::eTotalTime:
-        col->type_ = Column::eTotalTime ;
-        col->title_ = "TotalTime" ;
-        break ;
-    case Column::eAvgTime:
-        col->type_ = Column::eAvgTime ;
-        col->title_ = "AvgTime" ;
-        break ;
-    case Column::eTotalScopeTime:
-        col->type_ = Column::eTotalScopeTime ;
-        col->title_ = "TotalScopeTime" ;
-        break ;
-    case Column::eAvgScopeTime:
-        col->type_ = Column::eAvgScopeTime ;
-        col->title_ = "AvgScopeTime" ;
-        break ;
-    case Column::eInstTotalTime:
-        col->type_ = Column::eInstTotalTime ;
-        col->title_ = "InstTotalTime" ;
-        break ;
-    case Column::eInstAvgTime:
-        col->type_ = Column::eInstAvgTime ;
-        col->title_ = "InstAvgTime" ;
-        break ;
-    case Column::eInstTotalScopeTime:
-        col->type_ = Column::eInstTotalScopeTime ;
-        col->title_ = "InstTotalScopeTime" ;
-        break ;
-    case Column::eInstAvgScopeTime:
-        col->type_ = Column::eInstAvgScopeTime ;
-        col->title_ = "InstAvgScopeTime" ;
+    case Column::eTime:
+        col->type_ = Column::eTime ;
+        col->title_ = "Time" ;
         break ;
     default:
         col->type_ = Column::eError ;
@@ -280,7 +190,7 @@ void Logger::addColumn(Column::ColEnum _type)
 }
 //-----------------------------------------------------------------------------
 
-void Logger::logRawScopes(Scope* _scope)
+void Logger::logTextScopes(std::ostream &fout)
 {
     columns_.clear() ;
 
@@ -290,14 +200,25 @@ void Logger::logRawScopes(Scope* _scope)
     addColumn(Column::eId) ;
     addColumn(Column::eParentId) ;
     addColumn(Column::eCall) ;
-    addColumn(Column::eTotalTime) ;
-    addColumn(Column::eTotalScopeTime) ;
+    addColumn(Column::eTime) ;
 
-    recursiveLogRawScopes(_scope) ;
+	for(auto& thread : *ThreadData::threads_)
+	{
+		fout << "_______________________________________________________________________________" << std::endl  ;
+		fout << "Thread " <<  thread->id_ << std::endl << std::endl ;
+
+		tab_ = 0 ;
+
+		recursiveLogTextScopes(thread->rootScope_) ;
+		logColumns(fout) ;
+
+		fout << std::endl << std::endl << std::endl ;
+	}
+
 }
 //-----------------------------------------------------------------------------
 
-void Logger::recursiveLogRawScopes(Scope* _scope)
+void Logger::recursiveLogTextScopes(Scope* _scope)
 {
     LogScopeData data ;
 
@@ -315,17 +236,113 @@ void Logger::recursiveLogRawScopes(Scope* _scope)
 
         data.call = _scope->data_->callNum_ ;
 
-        data.time_ = 0 ;
-        data.scopeTime_ = 0 ;
-        data.instTime_ = 0 ;
+        data.time_ = _scope->data_->time_ ;
 
 		logScope(&data) ;
     }
 
     for(auto& scope : *_scope->childs_)
     {
-        recursiveLogRawScopes(scope.second) ;
+        recursiveLogTextScopes(scope.second) ;
     }
+}
+//-----------------------------------------------------------------------------
+
+void Logger::logJsonScopes(std::ostream &fout)
+{
+	fout << "{" << std::endl ;
+
+	fout << "'functions': [" << std::endl ;
+	bool first=true ;
+	for(auto& desc : *Scope::descriptors_)
+	{
+		if(first==false)
+			fout << "," << std::endl ;
+		fout << "{" ;
+		fout << "name:" << "'" << std::hex << desc.second->name_ << "', " ;
+		fout << "addr:" << "'" << std::hex << desc.second->address_ << "', " ;
+		fout << "source:" << "'" << std::hex << desc.second->mangledName_ << "'" ;
+		fout << "}" << std::endl ;
+
+		first = false ;
+	}
+	fout << "]," << std::endl ;
+
+	first = true ;
+	fout << "'threads': [" << std::endl ;
+	for(auto& thread : *ThreadData::threads_)
+	{
+		if(first==false)
+			fout << "," << std::endl ;
+		fout << "{thread: {" ;
+		fout << "'id': " << std::hex << "'" << thread->id_ << "'," ;
+		fout << "scopes: [" ;
+		recursiveLogJsonScopes(thread->rootScope_, fout) ;
+		fout << "]}}" << std::endl ;
+
+		first = false ;
+	}
+	fout << "]" << std::endl ;
+
+	fout << "}" << std::endl ;
+}
+
+//-----------------------------------------------------------------------------
+void Logger::recursiveLogJsonScopes(Scope* _scope, std::ostream &fout)
+{
+    LogScopeData data ;
+
+    if(_scope->descriptor_!=nullptr)
+    {
+    	fout << "{" ;
+    	fout << "'addr': " << std::hex << "'" << _scope->descriptor_->address_ << "'," ;
+    	fout << "'calls': " << std::dec << _scope->data_->callNum_ << ","  ;
+    	fout << "'time': " << _scope->data_->time_  ;
+		if(_scope->childs_->size()>0)
+		{
+			fout << ", scopes: [" << std::endl ;
+
+			bool first=true ;
+			for(auto& scope : *_scope->childs_)
+			{
+				if(first==false)
+					fout << "," ;
+				recursiveLogJsonScopes(scope.second, fout) ;
+				first = false ;
+			}
+			fout << "]" ;
+		}
+		fout << "}" ;
+
+//        data.name = _scope->descriptor_->name_ ;
+//        data.source = _scope->descriptor_->mangledName_ ;
+//        data.address = _scope->descriptor_->address_ ;
+//
+//        data.id = _scope->id_ ;
+//        if(_scope->parentScope_)
+//            data.parentId = _scope->parentScope_->id_ ;
+//        else
+//            data.parentId = 0 ;
+//
+//        data.call = _scope->data_->callNum_ ;
+//
+//        data.time_ = _scope->data_->time_ ;
+//
+//		logScope(&data) ;
+    }
+    else
+    {
+		bool first=true ;
+    	for(auto& scope : *_scope->childs_)
+        {
+    		if(first==false)
+    			fout << ", " ;
+            recursiveLogJsonScopes(scope.second, fout) ;
+            first = false ;
+        }
+    }
+
+
 }
 //-----------------------------------------------------------------------------
 
@@ -357,32 +374,7 @@ void Logger::logColumns(std::ostream &fout_)
         fout_ << std::endl ;
     }
 }
-//
-////-----------------------------------------------------------------------------
-//void Logger::logGlobalScopes(Logger* logger_, ThreadData* thread_, std::ostream &fout_)
-//{
-//    //puts("Logger::logGlobalScopes") ;
-//
-//	//Compute all scopes data
-//    Scope::computeGlobalScopes(thread_) ;
-//
-//    //Purge current logger before appending data
-//    for(unsigned int col=0 ; col<logger_->_columns.size() ; col++)
-//    {
-//        logger_->_columns[col]->_lines.clear() ;
-//    }
-//
-//    //Output global scope stats
-//	std::map<void*,  Scope*>::iterator iscope ;
-//	for(iscope=thread_->_threadScopeList->begin() ; iscope!=thread_->_threadScopeList->end() ; iscope++)
-//	{
-//        //test if scope must be filtered
-//        if((iscope->second->_globalScope==NULL && isFiltered(iscope->second->_name, logger_)==false) ||
-//            (iscope->second->_globalScope!=NULL && isFiltered(iscope->second->_globalScope->_name, logger_)==false))
-//            logScope(logger_, iscope->second, fout_) ;
-//	}
-//}
-//
+
 //-----------------------------------------------------------------------------
 void Logger::logScope(LogScopeData* _data)
 {
@@ -413,61 +405,9 @@ void Logger::logScope(LogScopeData* _data)
         case Column::eName:
             col->lines_.push_back(_data->name) ;
             break ;
-        case Column::eTotalTime:
+        case Column::eTime:
             col->lines_.push_back(boost::lexical_cast<std::string>(Timing::computeTime(_data->time_, timing_))) ;
             break ;
-//        case Column::eTreeName:
-//            if(scope_->_globalScope!=NULL)
-//                (*icol)->_lines.push_back(Logger::computeTab()+scope_->_globalScope->_name) ;
-//            else
-//                (*icol)->_lines.push_back(computeTab()+scope_->_name) ;
-//            break ;
-//        case Column::eTotalTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(Timing::computeTime(scope_->_time, logger_))) ;
-//            break ;
-//        case Column::eAvgTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(Timing::computeTime(scope_->_time/scope_->_callNum, logger_))) ;
-//            break ;
-//        case Column::eTotalScopeTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(Timing::computeTime(ScopeTime, logger_))) ;
-//            break ;
-//        case Column::eAvgScopeTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(Timing::computeTime(ScopeTime/scope_->_callNum, logger_))) ;
-//            break ;
-//        case Column::eInstTotalTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(Timing::computeTime(scope_->_instTime, logger_))) ;
-//            break ;
-//        case Column::eInstAvgTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(Timing::computeTime(scope_->_instTime/scope_->_callNum, logger_))) ;
-//            break ;
-//        case Column::eInstTotalScopeTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>("ERROR!")) ;
-//            break ;
-//        case Column::eInstAvgScopeTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>("ERROR!")) ;
-//            break ;
-//        case Column::eRealTotalTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(Timing::computeTime(scope_->_time-scope_->_instTime, logger_))) ;
-//            break ;
-//        case Column::eRealAvgTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(Timing::computeTime((scope_->_time-scope_->_instTime)/scope_->_callNum, logger_))) ;
-//            break ;
-//        case Column::eAllocSize:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(scope_->_scopeMemStats._allocSize)) ;
-//            break ;
-//        case Column::eAllocNum:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(scope_->_scopeMemStats._allocNum)) ;
-//            break ;
-//        case Column::eTotalAllocTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(Timing::computeTime(scope_->_scopeMemStats._allocTime, logger_))) ;
-//            break ;
-//        case Column::eFreeNum:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(scope_->_scopeMemStats._freeNum)) ;
-//            break ;
-//        case Column::eAllocSource:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>("")) ;
-//            ShowAllocSource = true ;
-//            break ;
         default:
             col->lines_.push_back("######") ;
         }
@@ -478,207 +418,7 @@ void Logger::logScope(LogScopeData* _data)
 	tab_-- ;
 }
 
-////-----------------------------------------------------------------------------
-//void Logger::logOwnerBlocks(Logger* logger_, Scope* scope_, std::ostream& fout_)
-//{
-//    //puts("Logger::logOwnerBlocks") ;
-//
-//    std::vector< std::pair<Scope*, Scope::MemStats*> >::iterator istats ;
-//    for(istats=scope_->_memOwnerBlocks.begin() ; istats!=scope_->_memOwnerBlocks.end() ; istats++)
-//    {
-//        logOwnerBlock(logger_, istats->first, istats->second, fout_) ;
-//    }
-//}
-//
-////-----------------------------------------------------------------------------
-//void Logger::logOwnerBlock(Logger* logger_, Scope* scope_, Scope::MemStats* stats_, std::ostream& fout_)
-//{
-//    //puts("Logger::logOwnerBlock") ;
-//
-//    std::vector<Column*>::iterator icol ;
-//    for(icol=logger_->_columns.begin() ; icol!=logger_->_columns.end() ; icol++)
-//    {
-//        //Log columns
-//        switch((*icol)->_type)
-//        {
-//        case Column::eCall:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eAddress:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eSource:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eName:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eTreeName:
-//            (*icol)->_lines.push_back(Logger::computeTab()) ;
-//            break ;
-//        case Column::eTotalTime:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eAvgTime:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eTotalScopeTime:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eAvgScopeTime:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eInstTotalTime:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eInstAvgTime:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eInstTotalScopeTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>("ERROR!")) ;
-//            break ;
-//        case Column::eInstAvgScopeTime:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>("ERROR!")) ;
-//            break ;
-//        case Column::eRealTotalTime:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eRealAvgTime:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eAllocSize:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eAllocNum:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eTotalAllocTime:
-//            (*icol)->_lines.push_back("") ;
-//            break ;
-//        case Column::eFreeNum:
-//            (*icol)->_lines.push_back(boost::lexical_cast<std::string>(stats_->_freeNum)) ;
-//            break ;
-//        case Column::eAllocSource:
-//            if(scope_->_globalScope!=NULL)
-//                (*icol)->_lines.push_back(scope_->_globalScope->_name) ;
-//            else
-//                (*icol)->_lines.push_back(scope_->_name) ;
-//            break ;
-//        default:
-//            (*icol)->_lines.push_back("ERROR!") ;
-//        }
-//        if((*icol)->_lines.back().size()>(*icol)->_width)
-//            (*icol)->_width = (*icol)->_lines.back().size() ;
-//    }
-//}
-//
-////-----------------------------------------------------------------------------
-//void Logger::logTreeScopes(Logger* logger_, std::ostream &fout_)
-//{
-//    //puts("Logger::logTreeScopes") ;
-//
-//    //Purge current logger before appending data
-//    for(unsigned int col=0 ; col<logger_->_columns.size() ; col++)
-//    {
-//        logger_->_columns[col]->_lines.clear() ;
-//    }
-//
-//    //Clear Scope tree
-//    if(logger_->_rootScope!=NULL)
-//        Scope::recursiveClearScopes(logger_->_rootScope) ;
-//
-//    //Add the root scope, does not correspond to any function
-//    Scope* FilterScope=new Scope ;
-//    FilterScope->_globalScope = NULL ;
-//    FilterScope->_currTime = 0 ;
-//    FilterScope->_time = 0 ;
-//    FilterScope->_instTime = 0 ;
-//    FilterScope->_callNum = 0 ;
-//    FilterScope->_parentScope = NULL ;
-//    FilterScope->_filter = true ;
-//
-//    //compute filtered tree for this logger
-//    Scope::recursiveFilterScopes(logger_, logger_->_rootLogger->_rootScope, FilterScope) ;
-//    Scope::recursiveConcatenateScopes(FilterScope) ;
-//    Scope::recursiveConcatenateScopesMemstat(FilterScope) ;
-//
-//    logger_->_rootScope = FilterScope ;
-//
-//    _threadScopeChildExist->clear() ;
-//    _threadDepth = 1 ;
-//    _threadScopeChildExist->push_back(false) ;
-//
-//	std::vector< std::pair<void*, Scope*> >::iterator iscope ;
-//	unsigned int scope ;
-//	for(iscope=logger_->_rootScope->_childScopes.begin(), scope=0 ; iscope!=logger_->_rootScope->_childScopes.end() ; iscope++, scope++)
-//	{
-//		//Indique aux niveaux inférieurs que l'on est en train de traiter le dernier élément sur le niveau courant
-//		if(scope<logger_->_rootScope->_childScopes.size()-1)
-//			_threadScopeChildExist->at(_threadDepth-1) = true ;
-//		else
-//			_threadScopeChildExist->at(_threadDepth-1) = false ;
-//
-//		Logger::recusiveLogScopes(logger_, iscope->second, fout_) ;
-//	}
-//}
-//
-////-----------------------------------------------------------------------------
-//std::string Logger::computeTab()
-//{
-//    //puts("Logger::computeTab") ;
-//
-//    std::string Res ;
-//
-//	int depth ;
-//	for(depth=0 ; depth<_threadDepth-1 ; depth++)
-//	{
-//		if((*_threadScopeChildExist)[depth]==true)
-//		{
-//			Res += ": " ;
-//		}
-//		else
-//		{
-//			Res += "  " ;
-//		}
-//	}
-//
-//	//Res += ('0'+depth%10) ;
-//	//Res += " " ;
-//	Res += "+ " ;
-//
-//	return Res ;
-//}
-//
-////-----------------------------------------------------------------------------
-//void Logger::recusiveLogScopes(Logger* logger_, Scope* scope_, std::ostream& fout_)
-//{
-//    //puts("Logger::recusiveLogScopes") ;
-//
-//    logScope(logger_, scope_, fout_) ;
-//
-//    _threadScopeChildExist->push_back(false) ;
-//    _threadDepth++ ;
-//
-//	//Appel de la fonction récursive pour les portées inférieures
-//	std::vector< std::pair<void*, Scope*> >::iterator iscope ;
-//	unsigned int scope ;
-//	for(iscope=scope_->_childScopes.begin(), scope=0 ; iscope!=scope_->_childScopes.end() ; iscope++, scope++)
-//	{
-//		//Indique aux niveaux inférieurs que l'on est en train de traiter le dernier élément sur le niveau courant
-//		if(scope<scope_->_childScopes.size()-1)
-//			_threadScopeChildExist->at(_threadDepth-1) = true ;
-//		else
-//			_threadScopeChildExist->at(_threadDepth-1) = false ;
-//
-//		recusiveLogScopes(logger_, iscope->second, fout_) ;
-//	}
-//
-//    _threadDepth-- ;
-//    _threadScopeChildExist->pop_back() ;
-//}
-//
-//
-//
+//-----------------------------------------------------------------------------
 /**
 * Print tabs to standard output.
 * @param tabNum_ Number of tabs to print.
@@ -714,36 +454,6 @@ void Logger::printEntryExit(bool entry_)
 
     }
 }
-//-----------------------------------------------------------------------------
-//
-///**
-//* Debug function used to check call tree.
-//*/
-//void Logger::printTree(Scope* data_)
-//{
-//    //puts("Logger::printTree") ;
-//
-//    static int tab=0 ;
-//
-//    std::vector< std::pair<void*,  Scope*> >::iterator iscope ;
-//    for(iscope=data_->_childScopes.begin() ; iscope!=data_->_childScopes.end() ; iscope++)
-//    {
-//        printTabs(tab) ;
-//        std::cout << ">>" ;
-//        std::cout << iscope->second->_globalScope->_name << "  " << iscope->first << " [" << iscope->second->_callNum << "]  " << iscope->second->_time << std::endl ;
-//        tab++ ;
-//
-//        printTree(iscope->second) ;
-//
-//        tab-- ;
-//        printTabs(tab) ;
-//        std::cout << "<<" ;
-//        std::cout << iscope->second->_globalScope->_name << "  " << iscope->first << " [" << iscope->second->_callNum << "]" << std::endl ;
-//
-//    }
-//
-//    //std::cout << "Time consumed by logger: " << scopeLoggerTime << std::endl ;
-//}
 //-----------------------------------------------------------------------------
 
 void Logger::logScopeEntry(Scope* _scope)

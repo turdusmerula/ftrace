@@ -51,19 +51,25 @@ struct Column
                     eParentId,      // parent scope id
                     eId,            // unique id of the scope
                     eCall,          // total number of calls
-                    eTreeName,
-                    eTotalTime, eAvgTime,              //Total time elapsed for scope
-                    eTotalScopeTime, eAvgScopeTime,    //Total time in scope only
-                    eInstTotalTime, eInstAvgTime,      //Total time in instrument
-                    eInstTotalScopeTime, eInstAvgScopeTime, //Total time in instrument for scope
+                    eTime,
                     eError
-                } ColEnum ;
+	} ColEnum ;
 
+	typedef enum {
+		eScope,
+		eThread,
+		eProcess
+	} ScopeEnum ;
 
-    /**
+	/**
     * Column type.
     */
     ColEnum type_ ;
+
+    /**
+    * Datan scope.
+    */
+    ScopeEnum scope_ ;
 
     /**
     * Max width of data inside column.
@@ -103,28 +109,19 @@ struct Pattern
 class Logger
 {
 public:
+	typedef enum {
+		eText,
+		eJson
+	} FormatEnum ;
+
 
     Logger() ;
-
-    typedef enum { eProcess, eThread } LoggerScopeEnum ;
-    typedef enum { eFlat, eTree, eRaw } LoggerTypeEnum ;
 
     /**
      * Indicates if logger is a root logger.
      * Root loggers does log on console but does not appear in output stat files.
      */
     bool root_ ;
-
-    /**
-    * Indicates logger type.
-    */
-    LoggerTypeEnum logType_ ;
-
-    /**
-    * Indicates logger scope.
-    */
-    LoggerScopeEnum logScope_ ;
-
 
     /**
     * Way of displaying time inside logger.
@@ -168,6 +165,11 @@ public:
     * Internal tabs counter for logger display.
     */
     int tab_ ;
+
+    /**
+     * Output format
+     */
+    FormatEnum format_ ;
 
     /**
     * Buffer indicating existence of child for displaying tree.
@@ -221,11 +223,6 @@ private:
         uint64_t call ;
 
         uint64_t time_ ;
-        uint64_t avgTime_ ;
-        uint64_t scopeTime_ ;
-        uint64_t avgScopeTime_ ;
-        uint64_t instTime_ ;
-        uint64_t avgInstTime_ ;
     } ;
 
     /**
@@ -256,73 +253,30 @@ private:
 
 
 
+
     /**
-    * Log scopes to a stream with a raw output.
+    * Log scopes to a stream with a text output.
     * @param fout_ Stream to log to.
     */
-    void logRawScopes(Scope* _scope)
+    void logTextScopes(std::ostream &fout_)
         __attribute__((no_instrument_function)) ;
 
     /**
-    * Log scopes to a stream with a raw output recursively.
+    * Log scopes to a stream with a text output recursively.
     * @param fout_ Stream to log to.
     */
-    void recursiveLogRawScopes(Scope* _scope)
+    void recursiveLogTextScopes(Scope* _scope)
         __attribute__((no_instrument_function)) ;
 
-
+    void logJsonScopes(std::ostream &fout) ;
 
     /**
-    * Log globals scopes to a stream
-    * @param logger_ Logger containing data.
-    * @param thread_ Thread containing functions to log.
+    * Log scopes to a stream with a json output recursively.
     * @param fout_ Stream to log to.
     */
-    static void logGlobalScopes(Logger* logger_, ThreadData* thread_, std::ostream &fout_)
+    void recursiveLogJsonScopes(Scope* _scope, std::ostream &fout)
         __attribute__((no_instrument_function)) ;
 
-    /**
-    * Log globals scopes to a stream
-    * @param logger_ Logger containing data.
-    * @param fout_ Stream to log to.
-    */
-    static void logTreeScopes(Logger* logger_, std::ostream &fout_)
-        __attribute__((no_instrument_function)) ;
-
-    /**
-    * Create the tabulation string.
-    * @return Result string.
-    */
-    static std::string computeTab()
-        __attribute__((no_instrument_function)) ;
-
-    /**
-    * Recursively log the scopes.
-    * @param logger_ Logger containing data.
-    * @param scope_ Scope to output.
-    * @param fout_ Stream to output to.
-    */
-    static void recusiveLogScopes(Logger* logger_, Scope* scope_, std::ostream& fout_)
-        __attribute__((no_instrument_function)) ;
-
-    /**
-    * Log memory stats of owner scopes for freed blocks.
-    * @param logger_ Logger containing data.
-    * @param scope_ Scope to output.
-    * @param fout_ Stream to output to.
-    */
-    static void logOwnerBlocks(Logger* logger_, Scope* scope_, std::ostream& fout_)
-        __attribute__((no_instrument_function)) ;
-
-    /**
-    * Log the memory stats for scope.
-    * @param logger_ Logger containing data.
-    * @param scope_ Scope to output.
-    * @param stats_ Memory stats for scope.
-    * @param fout_ Stream to output to.
-    */
-//    static void logOwnerBlock(Logger* logger_, Scope* scope_, Scope::MemStats* stats_, std::ostream& fout_)
-//        __attribute__((no_instrument_function)) ;
 
     static void printTabs(int tabNum_)
          __attribute__((no_instrument_function)) ;

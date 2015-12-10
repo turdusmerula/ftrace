@@ -29,7 +29,6 @@ using namespace ftrace ;
 ScopeData::ScopeData()
     : time_(0),
       scopeTime_(0),
-      instTime_(0),
       currTime_(0),
       callNum_(0)
 {

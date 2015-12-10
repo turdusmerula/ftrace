@@ -85,9 +85,6 @@ void __cyg_profile_func_enter(void* this_fn, void* call_site)
     //Prevent logging for instrument code
     threadFtraceFlag = true ;
 
-	//Time consumed by instrument, get start time
-    uint64_t profTime=Timing::getTime() ;
-
 	//Create thread data
 	if(threadData==nullptr)
 	{
@@ -115,6 +112,7 @@ void __cyg_profile_func_enter(void* this_fn, void* call_site)
     Scope* parentScope=threadData->scopeStack_->top() ;
 
     //Search scope in parent scope
+    // TODO: improve the search speed by using a map
     std::vector< std::pair<uint64_t, Scope*> >::iterator ipscope=parentScope->findChild(this_fn) ;
     if(ipscope==parentScope->childs_->end())
     {
@@ -134,9 +132,11 @@ void __cyg_profile_func_enter(void* this_fn, void* call_site)
             //Descriptor not found
 
             //Create new descriptor
+            ThreadData::globalLock() ;
             ScopeDescriptor* descriptor=new ScopeDescriptor ;
             threadData->currScope_->descriptor_ = descriptor ;
             Scope::descriptors_->operator[](this_fn) = descriptor ;
+            ThreadData::globalUnlock() ;
 
             //Demangle scope
             Demangling::getCaller(descriptor->mangledName_, descriptor->name_) ;
@@ -179,12 +179,6 @@ void __cyg_profile_func_enter(void* this_fn, void* call_site)
     //Function entry print
     Logger::rootLogger_->logScopeEntry(threadData->currScope_) ;
 
-    //Add time spend inside instrument
-    uint64_t diffProfTime=Timing::getTime()-profTime ;
-    threadData->currScope_->data_->instTime_ += diffProfTime ;
-    threadData->currScope_->threadData_->instTime_ += diffProfTime ;
-    threadData->currScope_->processData_->instTime_ += diffProfTime ;
-
     //Initialize time as near as the end of the instrument function as possible to measure the more accurate possible time
     threadData->currScope_->data_->currTime_ = Timing::getTime() ;
 
@@ -207,13 +201,14 @@ void __cyg_profile_func_exit(void *this_fn, void *call_site)
     if(threadFtraceFlag==true)
         return ;
 
-    uint64_t profTime=Timing::getTime() ; //Time consumed by profiler
-
 	//Lock thread data
 	threadData->lock() ;
 
 	//Prevent logging for instrument code
     threadFtraceFlag = true ;
+
+    //Measure time as near as the beginning of the instrument function as possible to measure the more accurate possible time
+    uint64_t time=Timing::getTime() ;
 
     // this is the current scope beeing exited
     Scope* exitScope=threadData->currScope_ ;
@@ -221,12 +216,10 @@ void __cyg_profile_func_exit(void *this_fn, void *call_site)
     //Pop scope data from stack
     threadData->currScope_ = threadData->scopeStack_->top() ;
 
-    //Measure time as near as the beginning of the instrument function as possible to measure the more accurate possible time
-    uint64_t diffTime=Timing::getTime()-threadData->currScope_->data_->currTime_ ;
-    threadData->currScope_->data_->time_ += diffTime ;
-    threadData->currScope_->threadData_->time_ += diffTime ;
-    threadData->currScope_->processData_->time_ += diffTime ;
-    threadData->currScope_->data_->currTime_ = diffTime ;
+    threadData->currScope_->data_->time_ += time-threadData->currScope_->data_->currTime_ ;
+    threadData->currScope_->threadData_->time_ += time-threadData->currScope_->data_->currTime_ ;
+    threadData->currScope_->processData_->time_ += time-threadData->currScope_->data_->currTime_ ;
+    threadData->currScope_->data_->currTime_ = time-threadData->currScope_->data_->currTime_ ;
 
     // Function exit print
     Logger::rootLogger_->logScopeExit(threadData->currScope_) ;
@@ -234,17 +227,11 @@ void __cyg_profile_func_exit(void *this_fn, void *call_site)
     //Pop scope data from stack
     threadData->scopeStack_->pop() ;
 
-    //Add elapsed time in instrument to the exited scope
-    uint64_t diffProfTime=Timing::getTime()-profTime ;
-    exitScope->data_->instTime_ += diffProfTime ;
-    exitScope->threadData_->instTime_ += diffProfTime ;
-    exitScope->processData_->instTime_ += diffProfTime ;
+    //Lock thread data
+	threadData->unlock() ;
 
 	//Accept logging
     threadFtraceFlag = false ;
-
-    //Lock thread data
-	threadData->unlock() ;
 
 	//puts("<< __cyg_profile_func_exit") ;
 }
@@ -267,6 +254,14 @@ void loadConfFile()
         Config::loadConfFile(logFile) ;
     else
         Logger::rootLogger_->trace_ = true ;
+
+    Logger* logger=new Logger() ;
+    logger->root_ = false ;
+    logger->filename_ = "profile" ;
+    logger->timing_ = Timing::eTicks ;
+    logger->format_ = Logger::eJson ;
+    Logger::loggers_->push_back(logger) ;
+
 }
 
 void ftrace_init(void)

@@ -37,28 +37,9 @@ bool Config::loadConfFile(const std::string &filename_)
 	FILE* file ;
 
     //Patterns to match
-    boost::regex reCategory("\\[(global|logger)\\]", boost::regex_constants::extended) ;
-    boost::regex reFile("file=(.+)", boost::regex_constants::extended) ;
-    boost::regex reType("type=(tree|flat|raw)", boost::regex_constants::extended) ;
-    boost::regex reTiming("timing=(auto|seconds|ticks)", boost::regex_constants::extended) ;
-    boost::regex reScope("scope=(process|thread)", boost::regex_constants::extended) ;
-    boost::regex reTrace("trace=(true|false)", boost::regex_constants::extended);
     boost::regex rePattern("(ignore|include) (.+)", boost::regex_constants::extended)  ;
-    boost::regex reColumns("columns=(.*)", boost::regex_constants::extended) ;
-    boost::regex reColumn("("
-    		"%Name|"
-    		"%Address|"
-    		"%Source|"
-    		"%Call|"
-    		"%TotalTime|"
-    		"%TotalScopeTime|"
-    		"%AvgTime|"
-    		"%AvgScopeTime|"
-    		"%InstTotalTime|"
-    		"%InstAvgTime|"
-    		"%InstTotalScopeTime|"
-    		"%InstAvgScopeTime|"
-    		")", boost::regex_constants::extended) ;
+    boost::regex reTrace("trace=(true|false)", boost::regex_constants::extended);
+    boost::regex reFormat("format=(text|json)", boost::regex_constants::extended);
     boost::regex reComment("#.*", boost::regex_constants::extended) ;
     boost::regex reSpace("^[ \t\n\r]*$", boost::regex_constants::extended) ;
 
@@ -103,61 +84,7 @@ bool Config::loadConfFile(const std::string &filename_)
 
             //printf("%s\n", buff) ;
 
-            if(boost::regex_match(buff, matches, reCategory))
-            {
-                //printf("------ reCategory !! ------\n") ;
-                if(matches[1]=="global")
-                    currLogger = Logger::rootLogger_ ;
-                else
-                {
-                    currLogger = new Logger ;
-                    currLogger->root_ = false ;
-                }
-            }
-            else if(boost::regex_match(buff, matches, reFile))
-            {
-                //printf("------ reFile !! ------\n") ;
-
-                if(matches[1]!="")
-                    currLogger->filename_ = matches[1];
-            }
-            else if(boost::regex_match(buff, matches, reType))
-            {
-                //printf("------ reType !! ------\n") ;
-                if(matches[1]=="tree")
-                    currLogger->logType_ = Logger::eTree ;
-                else if(matches[2]=="flat")
-                    currLogger->logType_ = Logger::eFlat ;
-                else
-                    currLogger->logType_ = Logger::eRaw ;
-            }
-            else if(boost::regex_match(buff, matches, reTiming))
-            {
-                //printf("------ reTiming !! ------\n") ;
-                if(matches[1]=="auto")
-                    currLogger->timing_ = Timing::eAuto ;
-                else if(matches[2]=="second")
-                    currLogger->timing_ = Timing::eSecond ;
-                else
-                    currLogger->timing_ = Timing::eTicks ;
-
-            }
-            else if(boost::regex_match(buff, matches, reScope))
-            {
-                //printf("------ reScope !! ------\n") ;
-                if(matches[1]=="process")
-                    currLogger->logScope_ = Logger::eProcess ;
-                else
-                    currLogger->logScope_ = Logger::eThread ;
-            }
-            else if(boost::regex_match(buff, matches, reTrace))
-            {
-                //printf("------ reTrace !! ------\n") ;
-                //Set trace mode on/off (off is default)
-                if(matches[1]=="true")
-                    Logger::rootLogger_->trace_ = true ;
-            }
-            else if(boost::regex_match(buff, matches, rePattern))
+            if(boost::regex_match(buff, matches, rePattern))
             {
                 //printf("------ rePattern !! ------\n") ;
                 //Add an ignore/include pattern to current logger
@@ -169,52 +96,21 @@ bool Config::loadConfFile(const std::string &filename_)
                 pattern->pattern_ = boost::regex(std::string(matches[2]),  boost::regex_constants::extended) ;
                 currLogger->pattern_.push_back(pattern) ;
             }
-            else if(boost::regex_match(buff, matches, reColumns))
+            else if(boost::regex_match(buff, matches, reTrace))
             {
-                //printf("------ reLogger !! ------\n") ;
-
-                typedef boost::tokenizer<boost::char_separator<char> > tokenizer ;
-                boost::char_separator<char> sep("%") ;
-                tokenizer tokens(std::string(matches[1]), sep) ;
-
-                for(tokenizer::iterator tok_iter=tokens.begin() ; tok_iter!=tokens.end() ; ++tok_iter)
-                {
-                    std::string col="%"+*tok_iter ; //.substr(0, 2) ;
-
-                    boost::trim(col) ;
-                    //printf("------ columns: %s !! ------\n", col.c_str()) ;
-
-                    if(col=="%Call")
-                        currLogger->addColumn(Column::eCall) ;
-                    else if(col=="%Name" && currLogger->logType_!=Logger::eTree)
-                        currLogger->addColumn(Column::eTreeName) ;
-                    else if(col=="%Name")
-                        currLogger->addColumn(Column::eName) ;
-                    else if(col=="%Source")
-                        currLogger->addColumn(Column::eSource) ;
-                    else if(col=="%TotalTime")
-                        currLogger->addColumn(Column::eTotalTime) ;
-                    else if(col=="%AvgTime")
-                        currLogger->addColumn(Column::eAvgTime) ;
-                    else if(col=="%TotalScopeTime")
-                        currLogger->addColumn(Column::eTotalScopeTime) ;
-                    else if(col=="%AvgScopeTime")
-                        currLogger->addColumn(Column::eAvgScopeTime) ;
-                    else if(col=="%InstTotalTime")
-                        currLogger->addColumn(Column::eInstTotalTime) ;
-                    else if(col=="%InstAvgTime")
-                        currLogger->addColumn(Column::eInstAvgTime) ;
-                    else if(col=="%InstTotalScopeTime")
-                        currLogger->addColumn(Column::eInstTotalScopeTime) ;
-                    else if(col=="%InstAvgScopeTime")
-                        currLogger->addColumn(Column::eInstAvgScopeTime) ;
-                    else if(col=="%Address")
-                        currLogger->addColumn(Column::eAddress) ;
-                    else if(col=="%Source")
-                        currLogger->addColumn(Column::eSource) ;
-                    else
-                        fprintf(stderr, "Syntax error at line %d, incorrect column %s !\n", line, col.c_str()) ;
-                }
+                //printf("------ reTrace !! ------\n") ;
+                //Set trace mode on/off (off is default)
+                if(matches[1]=="true")
+                    Logger::rootLogger_->trace_ = true ;
+            }
+            else if(boost::regex_match(buff, matches, reFormat))
+            {
+                //printf("------ reTrace !! ------\n") ;
+                //Set trace mode on/off (off is default)
+                if(matches[1]=="text")
+                    Logger::rootLogger_->format_ = Logger::eText ;
+                else if(matches[1]=="json")
+                    Logger::rootLogger_->format_ = Logger::eJson ;
             }
             else if(boost::regex_match(buff, matches, reComment))
             {

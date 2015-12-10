@@ -11,94 +11,18 @@
 ###############################################################################
 
 # declares options for the console logger that traces entry/exit of functions
-[global]
-	#Flag activating/deactivating logger
-	#trace=true|false
-	trace=true
-	
-	#Patterns to ignore in logger, patterns are treaded by apparition order, if a pattern is matched more than once then the last match is taken.
-	#ignore .*
-	#include b<double>
-	#include g
-	#include b.*
-	#include c
-	ignore std::.*
-	ignore __gnu_cxx::.*
+#Flag activating/deactivating logger
+#trace=true|false
+trace=true
 
-#[logger]
-#Adds a logger in output file:
-# <file>: prefix for the output logger output file, default=.stats
-# if the same filename is given to several loggers data is appended to the end of file
-#
-# <type>: tree / flat / raw
-# tree: generate a coverage tree
-# flat: generate a flat list with all calls for each function
-# raw: print logger raw tree data, all options are ignored
-#
-# <timing>: how to export timing informations
-# auto: use the appropriate unit to display time
-# second: display in seconds
-# ticks: display processor ticks (usefull in case of variable frequency processor)
-#
-# <scope>: process / thread
-# process: data are concatenated by process
-# thread: defaul mode, export informations for each thread
-#
-# <colmuns>:
-# %Name 				: Demangled names of the called functions 
-# %Source 				: Raw name of the function
-# %Address 				: Adress of function
-# %Call 				: Number of call
+# output format, can be either text or json
+format=json
 
-# %TotalTime			: Total time elapsed in calls
-# %TotalScopeTime		: Total time elapsed in scope without time in sub-scopes
-# %AvgTime 				: Average time of one call
-# %AvgScopeTime 		: Average time elapsed in scope without average time in sub-scopes
-
-[logger]
-	# for raw logger all other options are ignored
-	file=trace-raw
-	type=raw
-
-[logger]
-	file=trace-process
-	type=tree
-	timing=auto
-	scope=process
-	columns=%Call %Name %TotalTime %AvgTime
-	
-	ignore std::.*
-	ignore boost::.*
-
-[logger]
-	# if the same filename is given data is appended to the end of file
-	file=trace-process
-	type=flat
-	timing=auto
-	scope=process
-	columns=%Call %Name %TotalTime %AvgTime
-	
-	ignore std::.*
-	ignore boost::.*
-
-
-[logger]
-	file=trace-thread
-	type=tree
-	timing=auto
-	scope=thread
-	columns=%Call %Name %TotalTime %AvgTime
-	
-	ignore std::.*
-	ignore boost::.*
-
-[logger]
-	# if the same filename is given data is appended to the end of file
-	file=trace-thread
-	type=flat
-	timing=auto
-	scope=thread
-	columns=%Call %Name %TotalTime %AvgTime
-	
-	ignore std::.*
-	ignore boost::.*
+#Patterns to ignore in logger, patterns are treaded by apparition order, if a pattern is matched more than once then the last match is taken.
+#ignore .*
+#include b<double>
+#include g
+#include b.*
+#include c
+ignore std::.*
+ignore __gnu_cxx::.*
