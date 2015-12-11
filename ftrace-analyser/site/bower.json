@@ -1,0 +1,42 @@
+{
+  "name": "bourniou",
+  "description": "Le site du bourniou",
+  "version": "0.0.0",
+  "homepage": "https://www.bourniou.com",
+  "license": "GNU",
+  "private": true,
+  "appPath": "app",
+
+  "dependencies": {
+    "angular": "~1.4.5",
+    "angular-animate": "~1.4.5",
+    "angular-route": "~1.4.5",
+    "ui-router": "~0.2.15",
+    "bootstrap": "~3.3.5",
+    "bootstrap-less": "~3.3.4",
+    "ngstorage": "~0.3.9",
+    "angular-websocket": "~1.0.14",
+    "bootstrap-ui-treeview": "~2.0.1",
+  },
+
+  "devDependencies": {
+    "angular-mocks": "~1.4.5",
+    "less": "~2.5.3"
+  },
+  
+  "resolutions": {
+    "angular": "~1.4.5"
+  },
+
+  "authors": [
+    "turdusmerula <sebastien.besombes@gmail.com>"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "app/bower_components",
+    "test",
+    "tests"
+  ]
+}

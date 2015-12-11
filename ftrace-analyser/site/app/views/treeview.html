@@ -1,0 +1,13 @@
+<div ng-controller='TreeViewCtrl'>
+
+<button type="button" class="btn btn-primary" ng-click='openjson()'>Primary</button>
+
+<div>{{result}}</div>
+
+<script type="text/ng-template" id="my/url/to/a/template.html">
+    <div class="pull-right">{{ node.name }}</div>
+</script>
+
+<tree-view ng-model="myData" node-label="name" item-class="pull-left" item-ng-include="my/url/to/a/template.html"></tree-view>
+
+</div>

@@ -252,16 +252,16 @@ void Logger::logJsonScopes(std::ostream &fout)
 {
 	fout << "{" << std::endl ;
 
-	fout << "'functions': [" << std::endl ;
+	fout << "\"functions\": [" << std::endl ;
 	bool first=true ;
 	for(auto& desc : *Scope::descriptors_)
 	{
 		if(first==false)
 			fout << "," << std::endl ;
 		fout << "{" ;
-		fout << "name:" << "'" << std::hex << desc.second->name_ << "', " ;
-		fout << "addr:" << "'" << std::hex << desc.second->address_ << "', " ;
-		fout << "source:" << "'" << std::hex << desc.second->mangledName_ << "'" ;
+		fout << "\"name\":" << "\"" << std::hex << desc.second->name_ << "\", " ;
+		fout << "\"addr\":" << "\"" << std::hex << desc.second->address_ << "\", " ;
+		fout << "\"source\":" << "\"" << std::hex << desc.second->mangledName_ << "\"" ;
 		fout << "}" << std::endl ;
 
 		first = false ;
@@ -269,14 +269,14 @@ void Logger::logJsonScopes(std::ostream &fout)
 	fout << "]," << std::endl ;
 
 	first = true ;
-	fout << "'threads': [" << std::endl ;
+	fout << "\"threads\": [" << std::endl ;
 	for(auto& thread : *ThreadData::threads_)
 	{
 		if(first==false)
 			fout << "," << std::endl ;
-		fout << "{thread: {" ;
-		fout << "'id': " << std::hex << "'" << thread->id_ << "'," ;
-		fout << "scopes: [" ;
+		fout << "{\"thread\": {" ;
+		fout << "\"id\": " << std::hex << "\"" << thread->id_ << "\"," ;
+		fout << "\"scopes\": [" ;
 		recursiveLogJsonScopes(thread->rootScope_, fout) ;
 		fout << "]}}" << std::endl ;
 
@@ -295,12 +295,12 @@ void Logger::recursiveLogJsonScopes(Scope* _scope, std::ostream &fout)
     if(_scope->descriptor_!=nullptr)
     {
     	fout << "{" ;
-    	fout << "'addr': " << std::hex << "'" << _scope->descriptor_->address_ << "'," ;
-    	fout << "'calls': " << std::dec << _scope->data_->callNum_ << ","  ;
-    	fout << "'time': " << _scope->data_->time_  ;
+    	fout << "\"addr\": " << std::hex << "\"" << _scope->descriptor_->address_ << "\"," ;
+    	fout << "\"calls\": " << std::dec << _scope->data_->callNum_ << ","  ;
+    	fout << "\"time\": " << _scope->data_->time_  ;
 		if(_scope->childs_->size()>0)
 		{
-			fout << ", scopes: [" << std::endl ;
+			fout << ", \"scopes\": [" << std::endl ;
 
 			bool first=true ;
 			for(auto& scope : *_scope->childs_)
