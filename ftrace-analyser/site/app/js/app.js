@@ -1,12 +1,20 @@
 'use strict';
 
-var ftraceAnalyser = angular.module('ftraceAnalyser', ['ngRoute', 'ngStorage', 'ui.router', 'ui.bootstrap.treeview']) ;
+var ftraceAnalyser = angular.module('ftraceAnalyser', ['ngRoute', 'ngStorage', 'ui.router', 'ngSanitize', 'adaptv.adaptStrap', 'ui.bootstrap']) ;
 
 ftraceAnalyser.config([ '$stateProvider', function($stateProvider) {
 	$stateProvider
-		.state('treeview', {
-			url: '/treeview',
-			templateUrl: 'views/treeview.html'
+		.state('calltree', {
+			url: '/calltree',
+			templateUrl: 'views/calltree.html'
+		})
+		.state('functions', {
+			url: '/functions',
+			templateUrl: 'views/functions.html'
+		})
+		.state('calllist', {
+			url: '/calllist',
+			templateUrl: 'views/calllist.html'
 		})
 		;
 	
@@ -33,5 +41,5 @@ ftraceAnalyser.run(['$rootScope', '$log', '$q', '$state', '$localStorage',
 	    $q = qService ;
 	    rootScopeService.$q = $q;
 	    
-	    $state.transitionTo('treeview');
+	    $state.transitionTo('functions');
 } ]);

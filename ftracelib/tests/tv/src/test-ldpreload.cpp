@@ -1,4 +1,7 @@
 #include <iostream>
+#include <vector>
+#include <thread>
+#include <memory>
 
 void recursive()
 {
@@ -41,6 +44,8 @@ void func5()
 		func4() ;
 }
 
+static std::vector<std::shared_ptr<std::thread>> threads ;
+
 int main(int argc, char* argv[])
 {
 	std::cout << "Test" << std::endl ;
@@ -50,6 +55,18 @@ int main(int argc, char* argv[])
 	func5() ;
 
 	recursive() ;
+
+	for(int i=0 ; i<20 ; i++)
+	{
+		threads.push_back(std::make_shared<std::thread>(
+			[]() {
+				func5() ;
+			}
+		)) ;
+	}
+	for(auto& thread : threads)
+		thread->join() ;
+
 
 	return 0 ;
 }

@@ -274,11 +274,11 @@ void Logger::logJsonScopes(std::ostream &fout)
 	{
 		if(first==false)
 			fout << "," << std::endl ;
-		fout << "{\"thread\": {" ;
+		fout << "{" ;
 		fout << "\"id\": " << std::hex << "\"" << thread->id_ << "\"," ;
 		fout << "\"scopes\": [" ;
 		recursiveLogJsonScopes(thread->rootScope_, fout) ;
-		fout << "]}}" << std::endl ;
+		fout << "]}" << std::endl ;
 
 		first = false ;
 	}

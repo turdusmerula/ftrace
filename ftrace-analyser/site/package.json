@@ -2,8 +2,8 @@
   "version": "0.0.0",
   "private": true,
   "name": "ftrace-analyser",
-  "description": "Analyseur de résultats ftrace",
-  "license": "MIT",
+  "description": "ftrace result analyser",
+  "license": "GNU",
   "dependencies": {
     "http-server": "~0.8.5",
     "tmp": "~0.0.28",
@@ -13,7 +13,7 @@
     
   },
   "scripts": {
-    "postinstall": "bower install",
+    "postinstall": "bower install --force",
 	
     "prestart": "npm install",
     "start": "http-server -a 0.0.0.0 -p 8000"

@@ -1,0 +1,47 @@
+<div ng-controller='CallTreeCtrl'>
+
+<h5>Call tree</h5>
+	<div class="btn-group" uib-dropdown dropdown-append-to-body>
+		<button id="btn-append-to-body" type="button" class="btn btn-primary" uib-dropdown-toggle>
+			Thread {{thread.id}}<span class="caret"></span>
+		</button>
+		<ul class="uib-dropdown-menu" role="menu" aria-labelledby="btn-append-to-body">
+			<li role="menuitem" ng-repeat="thread in threads">
+				<a ng-click="select(thread)">{{thread.id}}</a>
+			</li>
+		</ul>
+	</div>
+
+{{thread}}
+    <!-- ===== template files ===== -->
+    <script type="text/ng-template" id="src/treebrowser/docs/treeHeader.html">
+        <div>
+            <span class="name-cell pull-left">Address</span>
+            <!--span class="another-cell pull-right">Name</span-->
+            <span class="pull-right margin-right-lg">Calls</span>
+            <span class="pull-right margin-right-lg">Time</span>
+        </div>
+    </script>
+
+    <script type="text/ng-template" id="src/treebrowser/docs/treeNode.html">
+        <div>
+            <span class="name-cell pull-left">{{item.addr}}</span>
+            <!--span class="another-cell pull-right">{{item.name}}</span-->
+            <span class="pull-right margin-right-lg">{{item.calls}}</span>
+            <span class="pull-right margin-right-lg">{{item.time}}</span>
+        </div>
+    </script>
+    
+    <!-- ===== Usage with border & header ===== -->
+    <ad-tree-browser class="ad-border-default"
+                     data-tree-name="treeDemoBordered"
+                     data-row-ng-class="{added:item._selected}"
+                     data-tree-root="data.root"
+                     data-child-node="scopes"
+                     data-children-padding="15"
+                     data-bordered="true"
+                     data-node-header-url="src/treebrowser/docs/treeHeader.html"
+                     data-node-template-url="src/treebrowser/docs/treeNode.html">
+    </ad-tree-browser>
+
+</div>

@@ -1,0 +1,19 @@
+<div ng-controller='FunctionsCtrl'>
+
+	<h4>Functions</h4>
+
+	 <ad-table-lite table-name="Functions"
+	                enable-column-search="true"
+                 	search-text="searchText"
+	                column-definition="functionsTableColumnDefinition"
+	                local-data-source="functions"
+	                page-sizes="[50, 100, 1000]"
+	                pagination-btn-group-classes="pagination pagination-sm"
+	                table-classes="table table-bordered"
+	                items-not-found-message="No functions found"
+	                snug-sort-icons="true"
+	                debug="true"
+	                >
+	 </ad-table-lite>
+
+</div>

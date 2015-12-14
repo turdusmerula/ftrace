@@ -1,0 +1,34 @@
+<div ng-controller='CallListCtrl'>
+
+	<h4>Call list</h4>
+
+	<div class="btn-group" uib-dropdown dropdown-append-to-body>
+		<button id="btn-append-to-body" type="button" class="btn btn-primary" uib-dropdown-toggle>
+			Thread {{thread.id}}<span class="caret"></span>
+		</button>
+		<ul class="uib-dropdown-menu" role="menu" aria-labelledby="btn-append-to-body">
+			<li role="menuitem">
+				<a ng-click="select(allThreads)">All</a>
+			</li>
+			<li role="menuitem" ng-repeat="thread in threads">
+				<a ng-click="select(thread)">{{thread.id}}</a>
+			</li>
+		</ul>
+	</div>
+
+	<ad-table-lite table-name="Call list"
+	                enable-column-search="true"
+                 	search-text="searchText"
+	                column-definition="calllistTableColumnDefinition"
+	                local-data-source="calls"
+	                page-sizes="[50, 100, 1000]"
+	                pagination-btn-group-classes="pagination pagination-sm"
+	                table-classes="table table-bordered"
+	                items-not-found-message="No functions found"
+	                snug-sort-icons="true"
+	                debug="true"
+	                >
+	 </ad-table-lite>
+
+
+</div>
