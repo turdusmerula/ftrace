@@ -46,6 +46,7 @@ public:
     */
     #ifdef __i386
     static __inline__ uint64_t getTime()
+    	__attribute__((no_instrument_function))
     {
       uint64_t x;
       __asm__ volatile ("rdtsc" : "=A" (x));
@@ -53,6 +54,7 @@ public:
     }
     #elif __amd64
     static __inline__ uint64_t getTime()
+    	__attribute__((no_instrument_function))
     {
       uint64_t a, d;
       __asm__ volatile ("rdtsc" : "=a" (a), "=d" (d));

@@ -12,14 +12,14 @@
 		</ul>
 	</div>
 
-{{thread}}
     <!-- ===== template files ===== -->
     <script type="text/ng-template" id="src/treebrowser/docs/treeHeader.html">
         <div>
             <span class="name-cell pull-left">Address</span>
             <!--span class="another-cell pull-right">Name</span-->
-            <span class="pull-right margin-right-lg">Calls</span>
-            <span class="pull-right margin-right-lg">Time</span>
+            <span class="pull-right margin-right-lg column-width-100">Calls</span>
+            <span class="pull-right margin-right-lg column-width-100">Time</span>
+            <span class="pull-right margin-right-lg column-width-100">Inner</span>
         </div>
     </script>
 
@@ -27,8 +27,9 @@
         <div>
             <span class="name-cell pull-left">{{item.addr}}</span>
             <!--span class="another-cell pull-right">{{item.name}}</span-->
-            <span class="pull-right margin-right-lg">{{item.calls}}</span>
-            <span class="pull-right margin-right-lg">{{item.time}}</span>
+            <span class="pull-right margin-right-lg column-width-100">{{item.calls}}</span>
+            <span class="pull-right margin-right-lg column-width-100">{{item.real}}</span>
+            <span class="pull-right margin-right-lg column-width-100">{{item.inner}}</span>
         </div>
     </script>
     

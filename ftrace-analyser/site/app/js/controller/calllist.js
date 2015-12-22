@@ -53,7 +53,7 @@ function($scope, jsonloader) {
 		$log.debug("refresh functions") ;
 		$scope.functions = jsonloader.functions ;
 		$scope.threads = jsonloader.threads ;
-		$scope.calls = jsonloader.calls ;
+		$scope.calls = jsonloader.func_calls ;
 		$scope.thread = this ;
         $scope.$apply();
 	}) ;
@@ -61,7 +61,7 @@ function($scope, jsonloader) {
 	
     $scope.select = function(item) {
     	$scope.thread = item ;
-    	$scope.calls = item.calls ;
+    	$scope.calls = item.func_calls ;
     	$log.log('Selected: ', item);
     };
 

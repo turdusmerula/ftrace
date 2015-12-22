@@ -1,0 +1,9 @@
+.margin-right-lg {
+    margin-right: 10px;
+}
+
+.column-width-100 {
+	width:100px; /* or whatever width you want. */
+   	max-width:100px; /* or whatever width you want. */
+   	display: inline-block;	
+}

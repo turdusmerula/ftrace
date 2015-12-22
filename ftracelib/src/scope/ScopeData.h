@@ -44,21 +44,19 @@ public:
     uint64_t time_ ;
 
     /**
-    * Time elapsed inside the scope without time inside subscopes.
-    */
-    uint64_t scopeTime_ ;
-
-
-    /**
     * Calls number for the scope.
     */
     uint64_t callNum_ ;
-
 
     /**
     * Current time for the scope, used only by profiling functions.
     */
     uint64_t currTime_ ;
+
+    /**
+    * Time elapsed inside instrumentation code
+    */
+    uint64_t instTime_ ;
 
 } ;
 

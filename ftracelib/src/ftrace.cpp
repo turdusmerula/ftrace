@@ -78,6 +78,9 @@ thread_local bool threadFtraceFlag=false ;
 extern "C"
 void __cyg_profile_func_enter(void* this_fn, void* call_site)
 {
+    //Measure time as near as the beginning of the instrument function as possible to measure the more accurate possible time
+    uint64_t intime=Timing::getTime() ;
+
     //Avoid reentrant calls
 	if(threadFtraceFlag==true)
         return ;
@@ -180,7 +183,10 @@ void __cyg_profile_func_enter(void* this_fn, void* call_site)
     Logger::rootLogger_->logScopeEntry(threadData->currScope_) ;
 
     //Initialize time as near as the end of the instrument function as possible to measure the more accurate possible time
-    threadData->currScope_->data_->currTime_ = Timing::getTime() ;
+    uint64_t outtime=Timing::getTime() ;
+    threadData->currScope_->data_->currTime_ = outtime ;
+    if(parentScope)
+    	parentScope->data_->instTime_ += outtime-intime ;
 
 	//Accept logging
 	threadFtraceFlag = false ;
@@ -198,6 +204,9 @@ void __cyg_profile_func_enter(void* this_fn, void* call_site)
 extern "C"
 void __cyg_profile_func_exit(void *this_fn, void *call_site)
 {
+    //Measure time as near as the beginning of the instrument function as possible to measure the more accurate possible time
+    uint64_t intime=Timing::getTime() ;
+
     if(threadFtraceFlag==true)
         return ;
 
@@ -207,25 +216,26 @@ void __cyg_profile_func_exit(void *this_fn, void *call_site)
 	//Prevent logging for instrument code
     threadFtraceFlag = true ;
 
-    //Measure time as near as the beginning of the instrument function as possible to measure the more accurate possible time
-    uint64_t time=Timing::getTime() ;
-
     // this is the current scope beeing exited
     Scope* exitScope=threadData->currScope_ ;
 
     //Pop scope data from stack
     threadData->currScope_ = threadData->scopeStack_->top() ;
 
-    threadData->currScope_->data_->time_ += time-threadData->currScope_->data_->currTime_ ;
-    threadData->currScope_->threadData_->time_ += time-threadData->currScope_->data_->currTime_ ;
-    threadData->currScope_->processData_->time_ += time-threadData->currScope_->data_->currTime_ ;
-    threadData->currScope_->data_->currTime_ = time-threadData->currScope_->data_->currTime_ ;
+    threadData->currScope_->data_->time_ += intime-threadData->currScope_->data_->currTime_ ;
+    threadData->currScope_->threadData_->time_ += intime-threadData->currScope_->data_->currTime_ ;
+    threadData->currScope_->processData_->time_ += intime-threadData->currScope_->data_->currTime_ ;
+    threadData->currScope_->data_->currTime_ = intime-threadData->currScope_->data_->currTime_ ;
 
     // Function exit print
     Logger::rootLogger_->logScopeExit(threadData->currScope_) ;
 
     //Pop scope data from stack
     threadData->scopeStack_->pop() ;
+
+    //Initialize time as near as the end of the instrument function as possible to measure the more accurate possible time
+    uint64_t outtime=Timing::getTime() ;
+    threadData->currScope_->parentScope_->data_->instTime_ += outtime-intime ;
 
     //Lock thread data
 	threadData->unlock() ;

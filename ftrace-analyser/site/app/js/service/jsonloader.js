@@ -11,7 +11,7 @@ function () {
 	
 	this.functions = [] ;
 	this.threads = [] ;
-	this.calls = [] ;
+	this.func_calls = [] ;
 	
 	this.load = function(onOk) {
 		var me=this ;
@@ -23,8 +23,8 @@ function () {
 			me.data = eval("("+this.responseText+")") ;
 			me.functions = me.data.functions ;
 			me.threads = me.data.threads ;
-			me.calls = [] ;
-			me.computeCalls() ;
+			me.func_calls = [] ;
+			me.compute() ;
 			// call callback
 			onOk() ;
 		};  
@@ -37,53 +37,95 @@ function () {
 	this.destroy = function () {
 	};
 	
-	this.computeCalls = function () {
+	/**
+	 * Summarise calls and timings for function in each thread and process
+	 */
+	this.compute = function () {
 		var tl = this.threads.length;
 		for (var ith=0 ; ith<tl ; ith++) {
 			var thread = this.threads[ith] ;
-			thread.calls = [] ;
+			thread.func_calls = [] ;
 			
-			if(thread.hasOwnProperty('scopes'))
-				this.recursiveComputeCalls(thread.scopes, thread) ;
+			if(thread.hasOwnProperty('scopes')) {
+				this.recursiveComputeReal(thread, thread) ;
+				this.recursiveComputeInner(thread, thread) ;
+			}
 		}
 	} ;
 	
-	this.recursiveComputeCalls = function(scopes, thread) {
-		$log.debug("recursiveComputeCalls", scopes, thread) ;
-		var sl = scopes.length;
+	this.recursiveComputeReal = function(scope, thread) {
+		var sl = scope.scopes.length ;
 		for (var isc=0 ; isc<sl ; isc++) {
-			var scope = scopes[isc] ;
+			var child_scope = scope.scopes[isc] ;
 			
 			// Add scope timing and calls
-			this.addScopeData(scope, thread) ;
-			this.addScopeData(scope, this) ;
+			this.addScopeData(child_scope, thread) ;
+			this.addScopeData(child_scope, this) ;
 			
-			if(scope.hasOwnProperty('scopes'))
-				this.recursiveComputeCalls(scope.scopes, thread) ;
+			// set scope parent
+			child_scope.parent = scope ;
+			
+			// compute real time
+			child_scope.real = child_scope.time-child_scope.inst ;
+			
+			// alter all parents chain
+			var parent = child_scope.parent ;
+			while(parent!=null)	{
+				parent.real -= child_scope.inst ;
+				parent = parent.parent ;
+			}
+
+			if(child_scope.hasOwnProperty('scopes'))
+				this.recursiveComputeReal(child_scope, thread) ;
 		}	
 	} ;
 	
+	this.recursiveComputeInner = function(scope, thread) {
+		var sl = scope.scopes.length ;
+		for (var isc=0 ; isc<sl ; isc++) {
+			var child_scope = scope.scopes[isc] ;
+			
+			// Add scope timing and calls
+			this.addScopeData(child_scope, thread) ;
+			this.addScopeData(child_scope, this) ;
+			
+			// set scope parent
+			child_scope.parent = scope ;
+			
+			// compute inner timer
+			child_scope.inner = child_scope.real ;
+			child_scope.parent.inner -= child_scope.real ;
+			
+			if(child_scope.hasOwnProperty('scopes'))
+				this.recursiveComputeInner(child_scope, thread) ;
+		}	
+	} ;
+
+	/**
+	 * Add a scope data to global scope summary, if it does not exists create it
+	 */
 	this.addScopeData = function(scope, callsOwner) {
 	
-		var calls=callsOwner.calls ;
-		var call=null ;
+		var func_calls=callsOwner.func_calls ;
+		var func_call=null ;
 		
 		// search for call
-		var cl = calls.length ;
+		var cl = func_calls.length ;
 		for (var icl=0 ; icl<cl ; icl++) {
-			if(calls[icl].addr===scope.addr) {				
-				call = calls[icl] ;
+			if(func_calls[icl].addr===scope.addr) {				
+				func_call = func_calls[icl] ;
 				break ;
 			}
 		}
 		
-		if(call===null){
-			call = {"addr": scope.addr, "calls": scope.calls, "time": scope.time} ;
-			call.name = this.getFunction(scope.addr).name ;
-			calls.push(call) ;
+		if(func_call===null){
+			func_call = {"addr": scope.addr, "calls": scope.calls, "time": scope.time, "real": scope.time-scope.inst} ;
+			func_call.name = this.getFunction(scope.addr).name ;
+			func_calls.push(func_call) ;
 		} else {
-			call.calls += scope.calls ;
-			call.time += scope.time ;
+			func_call.calls += scope.calls ;
+			func_call.time += scope.time ;
+			func_call.real = scope.time-scope.inst ;
 		}
 	} ;
 	

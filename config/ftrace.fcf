@@ -13,7 +13,7 @@
 # declares options for the console logger that traces entry/exit of functions
 #Flag activating/deactivating logger
 #trace=true|false
-trace=true
+trace=false
 
 # output format, can be either text or json
 format=json

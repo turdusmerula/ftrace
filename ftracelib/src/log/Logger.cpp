@@ -297,6 +297,7 @@ void Logger::recursiveLogJsonScopes(Scope* _scope, std::ostream &fout)
     	fout << "{" ;
     	fout << "\"addr\": " << std::hex << "\"" << _scope->descriptor_->address_ << "\"," ;
     	fout << "\"calls\": " << std::dec << _scope->data_->callNum_ << ","  ;
+    	fout << "\"inst\": " << std::dec << _scope->data_->instTime_ << ","  ;
     	fout << "\"time\": " << _scope->data_->time_  ;
 		if(_scope->childs_->size()>0)
 		{
